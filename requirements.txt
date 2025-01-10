@@ -3,3 +3,7 @@ black
 
 # testing
 pytest~=8.3.4
+
+# configuration
+configparser
+
