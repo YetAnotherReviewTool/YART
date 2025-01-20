@@ -2,7 +2,7 @@ import logging
 import re
 from typing import List, Dict
 import git
-from git import Repo, GitCommandError, Commit
+from git import Repo, GitCommandError, Commit, NULL_TREE
 
 
 class InvalidGitURL(ValueError):
@@ -173,6 +173,38 @@ class RepositoryHelper:
         except Exception as e:
             logging.error(f"Failed to retrieve repository statistics: {e}")
             return {"commit_count": 0, "branch_count": 0}
+
+    def get_commit_by_id(self, hex: str):
+        return self._repo.commit(hex)
+
+    def get_files_affected(self, hex: str):
+        commit = self.get_commit_by_id(hex=hex)
+        return commit.stats.files
+
+    def get_diff_for_file(self, hex: str, file_path: str):
+        """
+        Get the diff for a specific file in a given commit.
+
+        Args:
+            hex (str) : Commit hash.
+            file_path (str) : Path to the file to get the diff for.
+        Returns:
+             str: A string containing the diff.
+        """
+        commit = self.get_commit_by_id(hex=hex)
+        parent = commit.parents[0] if commit.parents else None
+
+        if parent:
+            diff_index = parent.diff(commit, paths=file_path, create_patch=True)
+        else:
+            diff_index = commit.diff(NULL_TREE, paths=file_path, create_patch=True)
+
+        for diff in diff_index:
+            if diff.a_path == file_path or diff.b_path == file_path:
+                return diff.diff.decode('utf-8')
+
+        return ""
+
 
 
 def validate_git_repository_url(url: str) -> None:
