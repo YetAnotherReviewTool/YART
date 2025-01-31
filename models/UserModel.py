@@ -2,6 +2,9 @@ import ReportModel
 import ReviewModel
 import datetime
 
+import admin_backend
+
+
 class AccessError(PermissionError):
     """
     Custom exception for handling inufficient permissions.
@@ -33,14 +36,10 @@ class User:
 
         #whatever this is supposed to do? TODO
 
+    def change_password(self, old_password, new_password):
+        is_correct_password()
 
-    def generateReport(self) -> ReportModel.Report:
-        if not self.admin:
-            raise AccessError
-        else:
-            return ReportModel.Report #TODO
-        
-    def settings():
+    def settings(self):
         pass
         
     def getFromDB(userID):

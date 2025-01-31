@@ -19,6 +19,10 @@ from PyQt5.QtCore import Qt
 
 import sys
 
+from admin_backend import generate_report
+from models.UserModel import AccessError
+from services.session_service import Session
+
 STYLE_SHEET = """
 QWidget {
     background-color: #f5f5fa;  /* Light gray background */
@@ -395,7 +399,15 @@ class AdminPanelFrame(QWidget):
         self.setLayout(layout)
 
     def generate_report(self):
-        QMessageBox.information(self, "Report", "The report has been generated.")
+        current_session = Session()
+
+        try:
+            generate_report(current_session.getUserID)
+        except AccessError:
+            QMessageBox.information(self, "Insufficient role", "The report could not been generated. You are not the "
+                                                   "admin!")
+        else:
+            QMessageBox.information(self, "Report", "The report has been generated.")
         
         
 

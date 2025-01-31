@@ -1,6 +1,6 @@
-def app():
-    pass
-
+import userInterface
+from config.settings import read_config
 
 if __name__ == "__main__":
-    app()
+    read_config()
+    userInterface.main()
