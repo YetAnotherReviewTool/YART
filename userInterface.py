@@ -21,6 +21,7 @@ import sys
 
 from admin_backend import generate_report
 from models.UserModel import AccessError
+from services.login_service import login
 from services.session_service import Session
 
 STYLE_SHEET = """
@@ -112,14 +113,21 @@ class LoginFrame(QWidget):
         username = self.username_input.text()
         password = self.password_input.text()
 
-        if username == "admin" and password == "admin123":
-            self.main_window.user_role = "Administrator"
-            self.main_window.navigate_to_frame(1)
-        elif username and password:
-            self.main_window.user_role = "RegularUser"
-            self.main_window.navigate_to_frame(1)
-        else:
+        result = login(username, password)
+        if result is None:
             QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
+        else:
+            self.main_window.user_role = result
+            self.main_window.navigate_to_frame(1)
+
+        # if username == "admin" and password == "admin123":
+        #     self.main_window.user_role = "Administrator"
+        #     self.main_window.navigate_to_frame(1)
+        # elif username and password:
+        #     self.main_window.user_role = "RegularUser"
+        #     self.main_window.navigate_to_frame(1)
+        # else:
+        #     QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
 
 
 class MainMenuFrame(QWidget):
