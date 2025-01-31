@@ -1,4 +1,5 @@
 from models.ReviewModel import Review
+from services.review_service import ReviewBuilder
 
 
 def singleton(cls):
@@ -15,16 +16,16 @@ def singleton(cls):
 @singleton
 class Session:
     userID = None
-    reviewCreated = None
+    reviewBuilder = None
 
     def __init__(self):
         pass
 
-    def getReviewCreated(self):
-        return self.reviewCreated
+    def getReviewBuilder(self):
+        return self.reviewBuilder
 
-    def setReviewCreated(self, new_review: Review | None):
-        self.reviewCreated = new_review
+    def initReviewBuilder(self):
+        self.reviewBuilder = ReviewBuilder()
 
     def getUserID(self):
         return self.userID

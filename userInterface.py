@@ -20,6 +20,7 @@ from PyQt5.QtCore import Qt
 import sys
 
 from admin_backend import generate_report
+from models.ReviewModel import Review
 from models.UserModel import AccessError
 from services.login_service import login
 from services.session_service import Session
@@ -245,7 +246,7 @@ class AddNewReviewFrame(QWidget):
 
         form_layout.addRow("Title:", self.title_input)
         form_layout.addRow("Description:", self.detail2_input)
-        #form_layout.addRow("Detail 3:", self.detail3_input)
+        # form_layout.addRow("Detail 3:", self.detail3_input)
 
         self.next_button = QPushButton("Next", self)
         self.next_button.clicked.connect(self.validate_and_proceed)
@@ -265,7 +266,13 @@ class AddNewReviewFrame(QWidget):
         self.setLayout(layout)
 
     def validate_and_proceed(self):
-        if all([self.title_input.text(), self.detail2_input.text(), self.detail3_input.text()]):
+        if all([self.title_input.text(), self.detail2_input.text()]):
+            session = Session()
+            if session.getReviewBuilder() is None:
+                session.initReviewBuilder()
+
+            session.getReviewBuilder().set_title_and_desc(self.title_input.text(), self.detail2_input.text())
+
             self.main_window.navigate_to_frame(3)  # Navigate to Frame F3
         else:
             QMessageBox.warning(self, "Validation Error", "All fields must be filled!")
@@ -306,6 +313,15 @@ class AddNewReviewStep2Frame(QWidget):
         self.setLayout(layout)
 
     def confirm_review(self):
+        reviewBuilder = Session().getReviewBuilder()
+
+        reviewBuilder.add_author(Session().getUserID())
+        # TODO add commits and reviewers choice
+        # reviewBuilder.add_commits()
+        # reviewBuilder.add_reviewers()
+        reviewBuilder.build()
+
+        # FIXME
         review = {
             "title": self.main_window.frames[2].title_input.text(),
             "detail2": self.main_window.frames[2].detail2_input.text(),
@@ -412,7 +428,6 @@ class AdminPanelFrame(QWidget):
         else:
             QMessageBox.information(self, "Insufficient role", "The report could not been generated. You are not the "
                                                                "admin!")
-
 
 
 class ReviewEvaluationFrame(QWidget):
