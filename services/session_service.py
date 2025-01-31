@@ -1,3 +1,6 @@
+from models.ReviewModel import Review
+
+
 def singleton(cls):
     instances = {}
 
@@ -11,13 +14,13 @@ def singleton(cls):
 
 @singleton
 class Session:
-    userID = None
+    reviewCreated = None
 
     def __init__(self):
         pass
 
-    def getUserID(self):
-        return self.userID
+    def getReviewCreated(self):
+        return self.reviewCreated
 
-    def setUserID(self, new_user_id):
-        self.userID = new_user_id
+    def setReviewCreated(self, new_review: Review | None):
+        self.reviewCreated = new_review

@@ -1,8 +1,8 @@
-import ReviewParticipantModel
-import CommentModel
+from models import ReviewParticipantModel
+from models import CommentModel
 import enum
 import models.UserModel as UserModel
-import datetime 
+import datetime
 
 class ReviewStatus(enum.Enum):
     IN_REVIEW = enum.auto()
@@ -21,10 +21,14 @@ class Review:
         self.authorId: int
         self.reviewParticipants: list[int] #get from DB
 
-    def assignReviewer(self, userID: int) -> None:
+    def assignReviewer(self, userID: int,
+                       role: ReviewParticipantModel.ParticipantRole = ReviewParticipantModel.ParticipantRole.REVIEWER) -> None:
+        """
+            FR-02: Allow users to create reviews, add specific users and assign them roles
+        """
         newParticipant = ReviewParticipantModel.ReviewParticipant(
             userID,
-            ReviewParticipantModel.ParticipantRole.REVIEWER,
+            role,
             ReviewParticipantModel.ParticipantStatus.IN_PROGRESS,
             []
         )

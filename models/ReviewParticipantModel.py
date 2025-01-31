@@ -1,5 +1,5 @@
 import enum
-import CommentModel
+from models import CommentModel
 
 class ParticipantRole(enum.Enum):
     AUTHOR = enum.auto()

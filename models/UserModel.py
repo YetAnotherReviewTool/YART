@@ -1,8 +1,8 @@
-import ReportModel
-import ReviewModel
+import models.ReviewModel
 import datetime
 
 import admin_backend
+from models import ReviewModel
 
 
 class AccessError(PermissionError):
@@ -37,7 +37,8 @@ class User:
         #whatever this is supposed to do? TODO
 
     def change_password(self, old_password, new_password):
-        is_correct_password()
+        #is_correct_password()
+        pass
 
     def settings(self):
         pass

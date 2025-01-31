@@ -85,7 +85,7 @@ class LoginFrame(QWidget):
 
     def setup_ui(self):
         layout = QVBoxLayout()
-        
+
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
 
@@ -101,7 +101,7 @@ class LoginFrame(QWidget):
         self.login_button = QPushButton("Login", self)
         self.login_button.clicked.connect(self.authenticate_user)
         center_layout.addWidget(self.login_button)
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -140,15 +140,16 @@ class MainMenuFrame(QWidget):
         top_layout = QHBoxLayout()
         self.back_button = QPushButton("⚙️", self)
         self.back_button.setFixedSize(60, 60)
-        self.back_button.setStyleSheet("border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
+        self.back_button.setStyleSheet(
+            "border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
         self.back_button.clicked.connect(lambda: self.main_window.navigate_to_frame(4))
         top_layout.addStretch()
         top_layout.addWidget(self.back_button)
         layout.addLayout(top_layout)
-        
+
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
-        
+
         self.add_review_button = QPushButton("Add New Review", self)
         self.add_review_button.clicked.connect(lambda: self.main_window.navigate_to_frame(2))
         center_layout.addWidget(self.add_review_button)
@@ -159,12 +160,12 @@ class MainMenuFrame(QWidget):
 
         self.reviews_label = QLabel("Ongoing Reviews:", self)
         center_layout.addWidget(self.reviews_label)
-        
+
         self.reviews_container = QWidget()
         self.reviews_layout = QVBoxLayout()
         self.reviews_container.setLayout(self.reviews_layout)
         center_layout.addWidget(self.reviews_container)
-        
+
         self.see_more_button = QPushButton("See More", self)
         self.see_more_button.clicked.connect(lambda: self.main_window.navigate_to_frame(12))
         center_layout.addWidget(self.see_more_button)
@@ -175,7 +176,7 @@ class MainMenuFrame(QWidget):
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
-        
+
         self.setLayout(layout)
         self.refresh_reviews()
 
@@ -218,15 +219,16 @@ class AddNewReviewFrame(QWidget):
         top_layout = QHBoxLayout()
         self.back_button = QPushButton("←", self)
         self.back_button.setFixedSize(60, 60)
-        self.back_button.setStyleSheet("border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
+        self.back_button.setStyleSheet(
+            "border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
         self.back_button.clicked.connect(lambda: self.main_window.navigate_to_frame(1))
         top_layout.addStretch()
         top_layout.addWidget(self.back_button)
         layout.addLayout(top_layout)
-        
+
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
-        
+
         form_widget = QWidget()
         form_layout = QFormLayout(form_widget)
         self.title_input = QLineEdit(self)
@@ -234,26 +236,23 @@ class AddNewReviewFrame(QWidget):
         self.detail3_input = QLineEdit(self)
 
         form_layout.addRow("Title:", self.title_input)
-        form_layout.addRow("Detail 2:", self.detail2_input)
-        form_layout.addRow("Detail 3:", self.detail3_input)
+        form_layout.addRow("Description:", self.detail2_input)
+        #form_layout.addRow("Detail 3:", self.detail3_input)
 
         self.next_button = QPushButton("Next", self)
         self.next_button.clicked.connect(self.validate_and_proceed)
         form_layout.addWidget(self.next_button)
-        
-        
+
         form_hbox = QHBoxLayout()
         form_hbox.addStretch()
         form_hbox.addWidget(form_widget)
         form_hbox.addStretch()
-        
+
         center_layout.addLayout(form_hbox)
 
-        
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
-
 
         self.setLayout(layout)
 
@@ -262,6 +261,7 @@ class AddNewReviewFrame(QWidget):
             self.main_window.navigate_to_frame(3)  # Navigate to Frame F3
         else:
             QMessageBox.warning(self, "Validation Error", "All fields must be filled!")
+
 
 class AddNewReviewStep2Frame(QWidget):
     """Frame F3: Add New Review #2"""
@@ -273,11 +273,12 @@ class AddNewReviewStep2Frame(QWidget):
 
     def setup_ui(self):
         layout = QVBoxLayout()
-        
+
         top_layout = QHBoxLayout()
         self.back_button = QPushButton("←", self)
         self.back_button.setFixedSize(60, 60)
-        self.back_button.setStyleSheet("border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
+        self.back_button.setStyleSheet(
+            "border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
         self.back_button.clicked.connect(lambda: self.main_window.navigate_to_frame(2))
         top_layout.addStretch()
         top_layout.addWidget(self.back_button)
@@ -285,11 +286,11 @@ class AddNewReviewStep2Frame(QWidget):
 
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
-        
+
         self.confirm_button = QPushButton("Confirm", self)
         self.confirm_button.clicked.connect(self.confirm_review)
         center_layout.addWidget(self.confirm_button)
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -306,7 +307,6 @@ class AddNewReviewStep2Frame(QWidget):
         self.main_window.frames[1].reviews.append(review)
         QMessageBox.information(self, "Success", "Review added successfully!")
         self.main_window.navigate_to_frame(1)  # Navigate back to the main frame
-
 
 
 class SettingsFrame(QWidget):
@@ -341,19 +341,17 @@ class SettingsFrame(QWidget):
 
         form_layout.addRow("Change Password:", self.password_input)
         form_layout.addRow("Select Option:", self.options_combo)
-        
+
         self.confirm_button = QPushButton("Confirm Change", self)
         self.confirm_button.clicked.connect(self.confirm_changes)
         form_layout.addWidget(self.confirm_button)
-        
+
         form_hbox = QHBoxLayout()
         form_hbox.addStretch()
         form_hbox.addWidget(form_widget)
         form_hbox.addStretch()
 
         center_layout.addLayout(form_hbox)
-
-        
 
         layout.addStretch()
         layout.addLayout(center_layout)
@@ -375,23 +373,24 @@ class AdminPanelFrame(QWidget):
 
     def setup_ui(self):
         layout = QVBoxLayout()
-        
+
         top_layout = QHBoxLayout()
         self.back_button = QPushButton("←", self)
         self.back_button.setFixedSize(60, 60)
-        self.back_button.setStyleSheet("border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
+        self.back_button.setStyleSheet(
+            "border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
         self.back_button.clicked.connect(lambda: self.main_window.navigate_to_frame(1))
         top_layout.addStretch()
         top_layout.addWidget(self.back_button)
         layout.addLayout(top_layout)
-        
+
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
-        
+
         self.generate_report_button = QPushButton("Generate Report", self)
         self.generate_report_button.clicked.connect(self.generate_report)
         center_layout.addWidget(self.generate_report_button)
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -399,17 +398,14 @@ class AdminPanelFrame(QWidget):
         self.setLayout(layout)
 
     def generate_report(self):
-        current_session = Session()
-
-        try:
-            generate_report(current_session.getUserID)
-        except AccessError:
-            QMessageBox.information(self, "Insufficient role", "The report could not been generated. You are not the "
-                                                   "admin!")
-        else:
+        if self.main_window.user_role == "Administrator":
+            generate_report()
             QMessageBox.information(self, "Report", "The report has been generated.")
-        
-        
+        else:
+            QMessageBox.information(self, "Insufficient role", "The report could not been generated. You are not the "
+                                                               "admin!")
+
+
 
 class ReviewEvaluationFrame(QWidget):
     """Frame F6: Review Evaluation"""
@@ -422,16 +418,17 @@ class ReviewEvaluationFrame(QWidget):
 
     def setup_ui(self):
         layout = QVBoxLayout()
-        
+
         top_layout = QHBoxLayout()
         self.back_button = QPushButton("←", self)
         self.back_button.setFixedSize(60, 60)
-        self.back_button.setStyleSheet("border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
+        self.back_button.setStyleSheet(
+            "border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
         self.back_button.clicked.connect(lambda: self.main_window.navigate_to_frame(1))
         top_layout.addStretch()
         top_layout.addWidget(self.back_button)
         layout.addLayout(top_layout)
-        
+
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
 
@@ -448,7 +445,7 @@ class ReviewEvaluationFrame(QWidget):
         self.evaluate_button = QPushButton("Evaluate", self)
         self.evaluate_button.clicked.connect(self.open_verdict_popup)
         center_layout.addWidget(self.evaluate_button)
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -468,6 +465,7 @@ class ReviewEvaluationFrame(QWidget):
         dialog.set_review(self.review)
         dialog.exec_()
 
+
 class AddCommentPopup(QDialog):
     """Frame F7: Add Comment (Pop-up)"""
 
@@ -481,7 +479,7 @@ class AddCommentPopup(QDialog):
 
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
-        
+
         self.comment_input = QTextEdit(self)
         self.comment_input.setPlaceholderText("Write your comment here...")
         center_layout.addWidget(self.comment_input)
@@ -493,7 +491,7 @@ class AddCommentPopup(QDialog):
         self.cancel_button = QPushButton("Cancel", self)
         self.cancel_button.clicked.connect(self.close)
         center_layout.addWidget(self.cancel_button)
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -524,10 +522,10 @@ class VerdictPopup(QDialog):
 
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
-        
+
         self.verdict_label = QLabel("Select Verdict:", self)
         center_layout.addWidget(self.verdict_label)
-        
+
         self.verdict_combo = QComboBox(self)
         self.verdict_combo.addItems(["Accepted", "Rejected"])
         center_layout.addWidget(self.verdict_combo)
@@ -538,7 +536,7 @@ class VerdictPopup(QDialog):
         self.comments_display = QTextEdit(self)
         self.comments_display.setReadOnly(True)
         center_layout.addWidget(self.comments_display)
-        
+
         self.evaluate_button = QPushButton("Evaluate", self)
         self.evaluate_button.clicked.connect(self.submit_verdict)
         center_layout.addWidget(self.evaluate_button)
@@ -550,15 +548,14 @@ class VerdictPopup(QDialog):
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
-        
-        self.setLayout(layout)
 
+        self.setLayout(layout)
 
     def set_review(self, review):
         self.review = review
         comments = review.get("comments", [])
         self.comments_display.setText("\n".join(comments))
-        
+
     def submit_verdict(self):
         verdict = self.verdict_combo.currentText()
         if verdict:
@@ -579,11 +576,12 @@ class OwnReviewEditFrame(QWidget):
 
     def setup_ui(self):
         layout = QVBoxLayout()
-        
+
         top_layout = QHBoxLayout()
         self.back_button = QPushButton("←", self)
         self.back_button.setFixedSize(60, 60)
-        self.back_button.setStyleSheet("border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
+        self.back_button.setStyleSheet(
+            "border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
         self.back_button.clicked.connect(lambda: self.main_window.navigate_to_frame(1))
         top_layout.addStretch()
         top_layout.addWidget(self.back_button)
@@ -591,7 +589,7 @@ class OwnReviewEditFrame(QWidget):
 
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
-        
+
         self.review_label = QLabel("Edit Your Review:", self)
         center_layout.addWidget(self.review_label)
 
@@ -605,11 +603,11 @@ class OwnReviewEditFrame(QWidget):
         self.see_comments_button = QPushButton("See Comments", self)
         self.see_comments_button.clicked.connect(self.open_see_comments_popup)
         center_layout.addWidget(self.see_comments_button)
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
-        
+
         self.setLayout(layout)
 
     def set_review(self, review):
@@ -625,6 +623,7 @@ class OwnReviewEditFrame(QWidget):
         dialog = OwnReviewCommentsPopup(self.main_window)
         dialog.exec_()
 
+
 class OwnReviewCommentsPopup(QDialog):
     """Frame F10: Own Review Edit/Comments (Pop-up)"""
 
@@ -638,7 +637,7 @@ class OwnReviewCommentsPopup(QDialog):
 
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
-        
+
         self.comments_label = QLabel("Comments for this review:", self)
         center_layout.addWidget(self.comments_label)
 
@@ -651,7 +650,7 @@ class OwnReviewCommentsPopup(QDialog):
         self.close_button = QPushButton("Close", self)
         self.close_button.clicked.connect(self.close)
         center_layout.addWidget(self.close_button)
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -671,7 +670,7 @@ class OwnReviewAddCommentPopup(QDialog):
 
     def setup_ui(self):
         layout = QVBoxLayout()
-        
+
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
 
@@ -697,7 +696,7 @@ class OwnReviewAddCommentPopup(QDialog):
         self.cancel_button = QPushButton("Cancel", self)
         self.cancel_button.clicked.connect(self.close)
         center_layout.addWidget(self.cancel_button)
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -719,8 +718,7 @@ class OwnReviewAddCommentPopup(QDialog):
             self.close()
         else:
             QMessageBox.warning(self, "Error", "No review to update.")
-            
-            
+
 
 class ViewAllReviewsFrame(QWidget):
     """Frame F12: View All Reviews"""
@@ -732,15 +730,15 @@ class ViewAllReviewsFrame(QWidget):
 
     def setup_ui(self):
         layout = QVBoxLayout()
-        
-        
+
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
-        
+
         top_layout = QHBoxLayout()
         self.back_button = QPushButton("←", self)
         self.back_button.setFixedSize(60, 60)
-        self.back_button.setStyleSheet("border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
+        self.back_button.setStyleSheet(
+            "border-radius: 20px; background-color: #4b0082; color: white; font-size: 36px; font-weight: bold;")
         self.back_button.clicked.connect(lambda: self.main_window.navigate_to_frame(1))
         top_layout.addStretch()
         top_layout.addWidget(self.back_button)
@@ -753,8 +751,7 @@ class ViewAllReviewsFrame(QWidget):
         self.reviews_layout = QVBoxLayout()
         self.reviews_list.setLayout(self.reviews_layout)
         center_layout.addWidget(self.reviews_list)
-        
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -792,10 +789,9 @@ class ViewReviewDetailsFrame(QWidget):
     def setup_ui(self):
         layout = QVBoxLayout()
 
-
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
-        
+
         self.details_label = QLabel("Review Details:", self)
         center_layout.addWidget(self.details_label)
 
@@ -805,7 +801,7 @@ class ViewReviewDetailsFrame(QWidget):
         self.add_comment_button = QPushButton("Add Comment", self)
         self.add_comment_button.clicked.connect(self.navigate_to_add_comment)
         center_layout.addWidget(self.add_comment_button)
-        
+
         self.admin_panel_button = QPushButton("Archive Review", self)
         self.admin_panel_button.clicked.connect(lambda: self.main_window.navigate_to_frame(12))
         center_layout.addWidget(self.admin_panel_button)
@@ -813,10 +809,10 @@ class ViewReviewDetailsFrame(QWidget):
         self.back_button = QPushButton("Back", self)
         self.back_button.clicked.connect(lambda: self.main_window.navigate_to_frame(12))
         center_layout.addWidget(self.back_button)
-        
+
         self.admin_panel_button.setEnabled(False)
         self.admin_panel_button.setVisible(False)
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -828,7 +824,7 @@ class ViewReviewDetailsFrame(QWidget):
         self.review_details.setText(
             f"Title: {review['title']}\nAuthor: {review['author']}\nDetail 2: {review.get('detail2', '')}\nDetail 3: {review.get('detail3', '')}"
         )
-        
+
     def showEvent(self, event):
         self.admin_panel_button.setEnabled(self.main_window.user_role == "Administrator")
         self.admin_panel_button.setVisible(self.main_window.user_role == "Administrator")
@@ -851,7 +847,7 @@ class AddReviewCommentFrame(QWidget):
 
     def setup_ui(self):
         layout = QVBoxLayout()
-        
+
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
 
@@ -869,7 +865,7 @@ class AddReviewCommentFrame(QWidget):
         self.back_button = QPushButton("Back", self)
         self.back_button.clicked.connect(lambda: self.main_window.navigate_to_frame(13))
         center_layout.addWidget(self.back_button)
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -888,6 +884,7 @@ class AddReviewCommentFrame(QWidget):
         QMessageBox.information(self, "Success", "Comment added successfully!")
         self.comment_input.clear()
         self.main_window.navigate_to_frame(13)
+
 
 class MainWindow(QMainWindow):
     def __init__(self):
