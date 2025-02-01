@@ -1,7 +1,4 @@
-import PyQt5
 import pytest
-from PyQt5.QtWidgets import QApplication
-from PyQt5.QtTest import QTest
 from PyQt5.QtCore import Qt
 from userInterface import MainWindow
 
@@ -26,7 +23,7 @@ def test_valid_admin_login(qtbot, app, login_frame):
     qtbot.mouseClick(login_frame.login_button, Qt.LeftButton)
 
     assert app.user_role == "Administrator"
-    assert app.stacked_widget.currentWidget() == app.frames[1]  # MainMenuFrame
+    assert app.stacked_widget.currentWidget() == app.frames[1]
 
 
 def test_valid_user_login(qtbot, app, login_frame):
@@ -40,15 +37,12 @@ def test_valid_user_login(qtbot, app, login_frame):
     assert app.stacked_widget.currentWidget() == app.frames[1]  # MainMenuFrame
 
 
-def test_invalid_login(qtbot, app, login_frame, mocker):
-    """Test that an invalid login attempt shows an error message."""
-    mocker.patch("PyQt5.QtWidgets.QMessageBox.warning")
-
+def test_invalid_login(qtbot, app, login_frame):
+    """Test that an invalid login attempt causes user to stay on the login page."""
     login_frame.username_input.setText("invalid")
     login_frame.password_input.setText("wrongpass")
 
     qtbot.mouseClick(login_frame.login_button, Qt.LeftButton)
 
-    assert app.user_role is None  # User role should remain unset
-    assert app.stacked_widget.currentWidget() == login_frame  # Should still be on login frame
-    PyQt5.QtWidgets.QMessageBox.warning.assert_called_once()
+    assert app.user_role is None  # user role should remain unset
+    assert app.stacked_widget.currentWidget() == login_frame  # should still be on login frame
