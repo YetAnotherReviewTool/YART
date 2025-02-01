@@ -13,6 +13,7 @@ from PyQt5.QtWidgets import (
     QDialog,
     QTextEdit,
     QHBoxLayout,
+    QCheckBox
 )
 
 from PyQt5.QtCore import Qt
@@ -23,6 +24,7 @@ from admin_backend import generate_report
 from models.ReviewModel import Review
 from models.UserModel import AccessError
 from services.login_service import login
+from services.login_service import add_user
 from services.session_service import Session
 
 STYLE_SHEET = """
@@ -114,21 +116,23 @@ class LoginFrame(QWidget):
         username = self.username_input.text()
         password = self.password_input.text()
 
-        result = login(username, password)
-        if result is None:
-            QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
-        else:
-            self.main_window.user_role = result
-            self.main_window.navigate_to_frame(1)
 
-        # if username == "admin" and password == "admin123":
-        #     self.main_window.user_role = "Administrator"
-        #     self.main_window.navigate_to_frame(1)
-        # elif username and password:
-        #     self.main_window.user_role = "RegularUser"
-        #     self.main_window.navigate_to_frame(1)
-        # else:
+        # result = login(username, password)
+        # if result is None:
         #     QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
+        # else:
+        #     self.main_window.user_role = result
+        #     self.main_window.navigate_to_frame(1)
+
+        #just for testing
+        if username == "admin" and password == "admin123":
+            self.main_window.user_role = "Administrator"
+            self.main_window.navigate_to_frame(1)
+        elif username and password:
+            self.main_window.user_role = "RegularUser"
+            self.main_window.navigate_to_frame(1)
+        else:
+            QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
 
 
 class MainMenuFrame(QWidget):
@@ -414,6 +418,23 @@ class AdminPanelFrame(QWidget):
         self.generate_report_button = QPushButton("Generate Report", self)
         self.generate_report_button.clicked.connect(self.generate_report)
         center_layout.addWidget(self.generate_report_button)
+        
+        self.username_input = QLineEdit(self)
+        self.username_input.setPlaceholderText("Username")
+        center_layout.addWidget(self.username_input)
+
+        self.password_input = QLineEdit(self)
+        self.password_input.setPlaceholderText("Password")
+        self.password_input.setEchoMode(QLineEdit.Password)
+        center_layout.addWidget(self.password_input)
+
+        self.is_admin_checkbox = QCheckBox("Is Admin", self)
+        center_layout.addWidget(self.is_admin_checkbox)
+
+        self.create_account_button = QPushButton("Create Account", self)
+        self.create_account_button.clicked.connect(self.create_account)
+        center_layout.addWidget(self.create_account_button)
+
 
         layout.addStretch()
         layout.addLayout(center_layout)
@@ -428,6 +449,17 @@ class AdminPanelFrame(QWidget):
         else:
             QMessageBox.information(self, "Insufficient role", "The report could not been generated. You are not the "
                                                                "admin!")
+            
+    def create_account(self):
+        username = self.username_input.text()
+        password = self.password_input.text()
+        is_admin = self.is_admin_checkbox.isChecked()
+
+        if username and password:
+            add_user(username, password, is_admin)
+            QMessageBox.information(self, "Success", f"User '{username}' created successfully!")
+        else:
+            QMessageBox.warning(self, "Error", "Username and password cannot be empty.")
 
 
 class ReviewEvaluationFrame(QWidget):
@@ -851,7 +883,7 @@ class ViewReviewDetailsFrame(QWidget):
     def showEvent(self, event):
         self.admin_panel_button.setEnabled(self.main_window.user_role == "Administrator")
         self.admin_panel_button.setVisible(self.main_window.user_role == "Administrator")
-        self.refresh_reviews()
+        # self.refresh_reviews()
 
     def navigate_to_add_comment(self):
         if self.review:
