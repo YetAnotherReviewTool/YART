@@ -55,7 +55,7 @@ class RepositoryHelper:
         There is 50% chance it's going to blow up when I try this the first time. It didn't, hooray!
     """
 
-    def __init__(self, local_path: str, is_new_repo: bool, repo_url: str = "") -> None:
+    def __init__(self, local_path: str = "", is_new_repo: bool = False, repo_url: str = "") -> None:
         """
         Initialize a RepositoryHelper instance.
 

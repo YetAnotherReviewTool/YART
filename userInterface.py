@@ -1,3 +1,5 @@
+import os
+
 from PyQt5.QtWidgets import (
     QApplication,
     QMainWindow,
@@ -24,6 +26,7 @@ import sys
 from admin_backend import generate_report
 from models.ReviewModel import Review
 from models.UserModel import AccessError
+from services.git_service import RepositoryHelper
 from services.login_service import login
 from services.login_service import add_user
 from services.session_service import Session
@@ -111,8 +114,9 @@ class RepositoryInputDialog(QDialog):
 
     def confirm_location(self):
         file_path = self.file_input.text().strip()
-        if file_path:
+        if file_path and os.path.isdir(file_path) and not os.listdir(file_path):
             QMessageBox.information(self, "Repository Location", f"Repository location set to: {file_path}")
+            Session().add_path(file_path)
             self.close()
         else:
             QMessageBox.warning(self, "Error", "Please select a valid repository location.")
@@ -1074,6 +1078,12 @@ class MainWindow(QMainWindow):
 
         # Set the initial frame to F0 (Login)
         self.stacked_widget.setCurrentWidget(self.frames[0])
+
+        if Session().get_first_time():
+            self.show_repository_input_dialog()
+            RepositoryHelper(Session().get_path(), True, Session().get_url())
+        else:
+            RepositoryHelper(Session().get_path())
 
     def navigate_to_frame(self, frame_index):
         """Navigate to a specific frame by index."""

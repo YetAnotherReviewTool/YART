@@ -1,6 +1,7 @@
 import userInterface
 from config.settings import read_config
 from services.git_service import RepositoryHelper
+from services.session_service import Session
 
 
 def init_repository(url: str, path: str):
@@ -10,5 +11,8 @@ def init_repository(url: str, path: str):
 
 if __name__ == "__main__":
     url, path = read_config()
+    if path is None:
+        Session().set_first_time()
+    Session().add_url(url)
     init_repository(url, path)
     userInterface.main()
