@@ -17,8 +17,8 @@ class Session:
     def getReviewBuilder(self):
         return self.reviewBuilder
 
-    def initReviewBuilder(self):
-        self.reviewBuilder = ReviewBuilder(RepositoryHelper())
+    def initReviewBuilder(self, title: str, description: str):
+        self.reviewBuilder = ReviewBuilder(RepositoryHelper(), title, description)
 
     def getUserID(self):
         return self.userID

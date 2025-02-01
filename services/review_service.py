@@ -8,10 +8,10 @@ from services.git_service import RepositoryHelper
 
 class ReviewBuilder:
 
-    def __init__(self, helper: RepositoryHelper) -> None:
+    def __init__(self, helper: RepositoryHelper, title: str, description: str) -> None:
         super().__init__()
         self._helper = helper
-        self._review = Review()
+        self._review = Review(title, description)
 
     def add_title_and_desc(self, tile: str, description: str):
         pass

@@ -317,9 +317,9 @@ class AddNewReviewFrame(QWidget):
         if all([self.title_input.text(), self.detail2_input.text()]):
             session = Session()
             if session.getReviewBuilder() is None:
-                session.initReviewBuilder()
-
-            session.getReviewBuilder().set_title_and_desc(self.title_input.text(), self.detail2_input.text())
+                session.initReviewBuilder(self.title_input.text(), self.detail2_input.text())
+            else:
+                session.getReviewBuilder().set_title_and_desc(self.title_input.text(), self.detail2_input.text())
 
             self.main_window.navigate_to_frame(3)  # Navigate to Frame F3
         else:

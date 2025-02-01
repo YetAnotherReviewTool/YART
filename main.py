@@ -14,5 +14,4 @@ if __name__ == "__main__":
     if path is None:
         Session().set_first_time()
     Session().add_url(url)
-    init_repository(url, path)
     userInterface.main()
