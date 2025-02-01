@@ -11,6 +11,7 @@ class Session:
     is_first_time = False
 
     def __init__(self):
+        self.path = None
         self.url = None
 
     def getReviewBuilder(self):

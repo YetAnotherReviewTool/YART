@@ -24,6 +24,7 @@ from PyQt5.QtCore import Qt
 import sys
 
 from admin_backend import generate_report
+from config.settings import add_url
 from models.ReviewModel import Review
 from models.UserModel import AccessError
 from services.git_service import RepositoryHelper
@@ -532,12 +533,7 @@ class AdminPanelFrame(QWidget):
         self.create_account_button.clicked.connect(self.create_account)
         center_layout.addWidget(self.create_account_button)
 
-
-        self.add_user_button = QPushButton("Add user", self)
-        self.add_user_button.clicked.connect(self.add_user)
-
         center_layout.addWidget(self.generate_report_button)
-        center_layout.addWidget(self.add_user_button)
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -1082,6 +1078,7 @@ class MainWindow(QMainWindow):
         if Session().get_first_time():
             self.show_repository_input_dialog()
             RepositoryHelper(Session().get_path(), True, Session().get_url())
+            add_url(Session().get_url())
         else:
             RepositoryHelper(Session().get_path())
 

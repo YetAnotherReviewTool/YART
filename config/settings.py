@@ -72,3 +72,17 @@ def read_config():
 
 if __name__ == "__main__":
     read_config()
+
+
+def add_url(new_url: str):
+    config = configparser.ConfigParser()
+
+    script_dir = Path(__file__).parent
+
+    config_path = script_dir / "config.ini"
+
+    config.read(config_path)
+    config.set('REPOSITORY', 'file_path', new_url)
+
+    with open(config_path, 'w') as configfile:
+        config.write(configfile)
