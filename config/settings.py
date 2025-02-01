@@ -1,6 +1,8 @@
 import configparser
 import logging.config
+import os
 from logging.handlers import RotatingFileHandler
+from pathlib import Path
 
 
 def configure_logging(config: configparser.SectionProxy):
@@ -12,7 +14,7 @@ def configure_logging(config: configparser.SectionProxy):
 
     """
     log_format = config.get(
-        "log_format", "%(asctime)s - %(name)s - %(levelname)s - %(message)s"
+        "log_format", "%(levelname)s - %(asctime)s - %(name)s - %(message)s"
     )
     log_date_format = config.get("date_format", "%Y-%m-%d %H:%M:%S")
     max_bytes = int(config.get("max_bytes") or 5 * 1024 * 1024)
@@ -35,6 +37,17 @@ def configure_logging(config: configparser.SectionProxy):
     root_logger.addHandler(rotating_handler)
 
 
+def configure_repository(repo):
+    url = repo.get("url")
+
+    if url is None:
+        raise ValueError("No url provided. Git repository could not be located.")
+
+    file_path = repo.get("file_path")
+
+    return url, file_path
+
+
 def read_config():
     """
     Read configuration file `config.ini` and returns the configuration values:
@@ -45,12 +58,16 @@ def read_config():
     """
     config = configparser.ConfigParser()
 
-    config.read("config.ini")
+    script_dir = Path(__file__).parent
+
+    config_path = script_dir / "config.ini"
+
+    config.read(config_path)
 
     if "LOGGING" in config:
         configure_logging(config["LOGGING"])
-
-    pass
+    print("LOGGING" in config)
+    return configure_repository(config["REPOSITORY"])
 
 
 if __name__ == "__main__":

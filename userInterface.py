@@ -114,21 +114,21 @@ class LoginFrame(QWidget):
         username = self.username_input.text()
         password = self.password_input.text()
 
-        result = login(username, password)
-        if result is None:
-            QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
-        else:
-            self.main_window.user_role = result
-            self.main_window.navigate_to_frame(1)
-
-        # if username == "admin" and password == "admin123":
-        #     self.main_window.user_role = "Administrator"
-        #     self.main_window.navigate_to_frame(1)
-        # elif username and password:
-        #     self.main_window.user_role = "RegularUser"
-        #     self.main_window.navigate_to_frame(1)
-        # else:
+        # result = login(username, password)
+        # if result is None:
         #     QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
+        # else:
+        #     self.main_window.user_role = result
+        #     self.main_window.navigate_to_frame(1)
+
+        if username == "admin" and password == "admin123":
+            self.main_window.user_role = "Administrator"
+            self.main_window.navigate_to_frame(1)
+        elif username and password:
+            self.main_window.user_role = "RegularUser"
+            self.main_window.navigate_to_frame(1)
+        else:
+            QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
 
 
 class MainMenuFrame(QWidget):
@@ -413,8 +413,12 @@ class AdminPanelFrame(QWidget):
 
         self.generate_report_button = QPushButton("Generate Report", self)
         self.generate_report_button.clicked.connect(self.generate_report)
-        center_layout.addWidget(self.generate_report_button)
 
+        self.add_user_button = QPushButton("Add user", self)
+        self.add_user_button.clicked.connect(self.add_user)
+
+        center_layout.addWidget(self.generate_report_button)
+        center_layout.addWidget(self.add_user_button)
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -428,7 +432,8 @@ class AdminPanelFrame(QWidget):
         else:
             QMessageBox.information(self, "Insufficient role", "The report could not been generated. You are not the "
                                                                "admin!")
-
+    def add_user(self):
+        pass
 
 class ReviewEvaluationFrame(QWidget):
     """Frame F6: Review Evaluation"""

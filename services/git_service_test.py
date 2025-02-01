@@ -10,7 +10,7 @@ from services.git_service import InvalidGitURL, validate_git_repository_url
         "git@github.com:user/repo.git",
         "https://github.com/zpqrtbnk/test-repo.git",
         "git@github.com:zpqrtbnk/test-repo.git",
-    ]
+    ],
 )
 def test_valid_git_urls(url):
     """Test that valid Git URLs are accepted without raising exceptions."""
@@ -30,6 +30,7 @@ def test_valid_git_urls(url):
 def test_invalid_git_urls(url):
     with pytest.raises(InvalidGitURL):
         validate_git_repository_url(url)
+
 
 # def test_repo_connection():
 #     helper = RepositoryHelper("C:\\Users\\katri\\Desktop\\YART", False)
