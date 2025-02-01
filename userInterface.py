@@ -109,7 +109,7 @@ class RepositoryInputDialog(QDialog):
 
     def browse_folder(self):
         folder_dialog = QFileDialog()
-        folder_path, _ = folder_dialog.getExistingDirectory(self, "Select Repository Location")
+        folder_path = folder_dialog.getExistingDirectory(self, "Select Repository Location")
         if folder_path:
             self.folder_input.setText(folder_path)
 
