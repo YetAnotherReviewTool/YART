@@ -410,7 +410,7 @@ class AddNewReviewStep2Frame(QWidget):
             QMessageBox.information(self, "Commit Added", f"Commit '{commit_id}' added successfully.")
             self.commit_input.clear()
         else:
-            QMessageBox.warning(self, "Error", "Commit ID cannot be empty.")
+            QMessageBox.warning(self, "Error", "Commit cannot be empty.")
             
     def confirm_review(self):
         reviewBuilder = Session().getReviewBuilder()
@@ -1078,7 +1078,7 @@ class MainWindow(QMainWindow):
         if Session().get_first_time():
             self.show_repository_input_dialog()
             RepositoryHelper(Session().get_path(), True, Session().get_url())
-            add_url(Session().get_url())
+            add_url(Session().get_path())
         else:
             RepositoryHelper(Session().get_path())
 
