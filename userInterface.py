@@ -155,7 +155,6 @@ class LoginFrame(QWidget):
         username = self.username_input.text()
         password = self.password_input.text()
 
-
         # result = login(username, password)
         # if result is None:
         #     QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
@@ -164,6 +163,7 @@ class LoginFrame(QWidget):
         #     self.main_window.navigate_to_frame(1)
 
         #just for testing
+
         if username == "admin" and password == "admin123":
             self.main_window.user_role = "Administrator"
             self.main_window.navigate_to_frame(1)
@@ -509,6 +509,7 @@ class AdminPanelFrame(QWidget):
 
         self.generate_report_button = QPushButton("Generate Report", self)
         self.generate_report_button.clicked.connect(self.generate_report)
+
         center_layout.addWidget(self.generate_report_button)
         
         self.username_input = QLineEdit(self)
@@ -528,6 +529,11 @@ class AdminPanelFrame(QWidget):
         center_layout.addWidget(self.create_account_button)
 
 
+        self.add_user_button = QPushButton("Add user", self)
+        self.add_user_button.clicked.connect(self.add_user)
+
+        center_layout.addWidget(self.generate_report_button)
+        center_layout.addWidget(self.add_user_button)
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()

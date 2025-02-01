@@ -19,19 +19,23 @@ class ReviewBuilder:
     def add_author(self, user_id):
         pass
 
-    def fetch_commits_and_display(self, user: str) -> list[tuple[str, str | bytes | None, int | None]] | None:
+    def fetch_commits_and_display(
+        self, user: str
+    ) -> list[tuple[str, str | bytes | None, int | None]] | None:
         """
-            Fetches commits and prepares them for display.
+        Fetches commits and prepares them for display.
 
-            Args:
-                user (str): user whose commits we should get
+        Args:
+            user (str): user whose commits we should get
 
-            Returns:
-                List[tuple] | None: list of commit details for display or None if there are no reviews
+        Returns:
+            List[tuple] | None: list of commit details for display or None if there are no reviews
         """
         commits = self._helper.get_commits_by_user(user)
 
         if len(commits) == 0:
             return None
 
-        return [(commit.hexsha, commit.message, commit.committed_date) for commit in commits]
+        return [
+            (commit.hexsha, commit.message, commit.committed_date) for commit in commits
+        ]

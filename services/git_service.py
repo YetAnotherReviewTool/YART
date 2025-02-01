@@ -4,6 +4,8 @@ from typing import List, Dict
 import git
 from git import Repo, GitCommandError, Commit, NULL_TREE
 
+from services.singleton import singleton
+
 
 class InvalidGitURL(ValueError):
     """
@@ -20,6 +22,7 @@ class InvalidGitURL(ValueError):
     pass
 
 
+@singleton
 class RepositoryHelper:
     """
     A helper class for interacting with Git repositories to retrieve information.
@@ -49,7 +52,7 @@ class RepositoryHelper:
             Provides general repository statistics, such as commit count and branch count.
 
     Note:
-        There is 50% chance it's going to blow up when I try this the first time.
+        There is 50% chance it's going to blow up when I try this the first time. It didn't, hooray!
     """
 
     def __init__(self, local_path: str, is_new_repo: bool, repo_url: str = "") -> None:
@@ -115,7 +118,6 @@ class RepositoryHelper:
         try:
             commits = list(self._repo.iter_commits(branch, max_count=count))
             return commits
-            # TODO check what data we need for frontend
         except GitCommandError as e:
             logging.error(f"Failed to fetch commits from branch '{branch}': {e}")
             return []
@@ -201,10 +203,9 @@ class RepositoryHelper:
 
         for diff in diff_index:
             if diff.a_path == file_path or diff.b_path == file_path:
-                return diff.diff.decode('utf-8')
+                return diff.diff.decode("utf-8")
 
         return ""
-
 
 
 def validate_git_repository_url(url: str) -> None:
