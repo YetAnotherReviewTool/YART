@@ -93,12 +93,12 @@ class RepositoryInputDialog(QDialog):
     def setup_ui(self):
         layout = QVBoxLayout()
 
-        self.file_input = QLineEdit(self)
-        self.file_input.setPlaceholderText("Select repository location")
-        layout.addWidget(self.file_input)
+        self.folder_input = QLineEdit(self)
+        self.folder_input.setPlaceholderText("Select repository location")
+        layout.addWidget(self.folder_input)
 
         self.browse_button = QPushButton("Browse", self)
-        self.browse_button.clicked.connect(self.browse_file)
+        self.browse_button.clicked.connect(self.browse_folder)
         layout.addWidget(self.browse_button)
 
         self.confirm_button = QPushButton("Confirm", self)
@@ -107,17 +107,17 @@ class RepositoryInputDialog(QDialog):
 
         self.setLayout(layout)
 
-    def browse_file(self):
-        file_dialog = QFileDialog()
-        file_path, _ = file_dialog.getOpenFileName(self, "Select Repository Location")
-        if file_path:
-            self.file_input.setText(file_path)
+    def browse_folder(self):
+        folder_dialog = QFileDialog()
+        folder_path, _ = folder_dialog.getExistingDirectory(self, "Select Repository Location")
+        if folder_path:
+            self.folder_input.setText(folder_path)
 
     def confirm_location(self):
-        file_path = self.file_input.text().strip()
-        if file_path and os.path.isdir(file_path) and not os.listdir(file_path):
-            QMessageBox.information(self, "Repository Location", f"Repository location set to: {file_path}")
-            Session().add_path(file_path)
+        folder_path = self.folder_input.text().strip()
+        if folder_path and os.path.isdir(folder_path) and not os.listdir(folder_path):
+            QMessageBox.information(self, "Repository Location", f"Repository location set to: {folder_path}")
+            Session().add_path(folder_path)
             self.close()
         else:
             QMessageBox.warning(self, "Error", "Please select a valid repository location.")
