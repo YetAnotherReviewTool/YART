@@ -13,7 +13,8 @@ from PyQt5.QtWidgets import (
     QDialog,
     QTextEdit,
     QHBoxLayout,
-    QCheckBox
+    QCheckBox,
+    QFileDialog
 )
 
 from PyQt5.QtCore import Qt
@@ -77,6 +78,44 @@ QDialog {
     border-radius: 10px;
 }
 """
+
+class RepositoryInputDialog(QDialog):
+    def __init__(self, main_window):
+        super().__init__(main_window)
+        self.main_window = main_window
+        self.setWindowTitle("Repository Location")
+        self.setup_ui()
+
+    def setup_ui(self):
+        layout = QVBoxLayout()
+
+        self.file_input = QLineEdit(self)
+        self.file_input.setPlaceholderText("Select repository location")
+        layout.addWidget(self.file_input)
+
+        self.browse_button = QPushButton("Browse", self)
+        self.browse_button.clicked.connect(self.browse_file)
+        layout.addWidget(self.browse_button)
+
+        self.confirm_button = QPushButton("Confirm", self)
+        self.confirm_button.clicked.connect(self.confirm_location)
+        layout.addWidget(self.confirm_button)
+
+        self.setLayout(layout)
+
+    def browse_file(self):
+        file_dialog = QFileDialog()
+        file_path, _ = file_dialog.getOpenFileName(self, "Select Repository Location")
+        if file_path:
+            self.file_input.setText(file_path)
+
+    def confirm_location(self):
+        file_path = self.file_input.text().strip()
+        if file_path:
+            QMessageBox.information(self, "Repository Location", f"Repository location set to: {file_path}")
+            self.close()
+        else:
+            QMessageBox.warning(self, "Error", "Please select a valid repository location.")
 
 
 class LoginFrame(QWidget):
@@ -305,17 +344,69 @@ class AddNewReviewStep2Frame(QWidget):
 
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
+        
+        form_widget = QWidget()
+        form_layout = QFormLayout(form_widget)
+
+        self.reviewer_input = QLineEdit(self)
+        self.reviewer_input.setPlaceholderText("Reviewer Username")
+        form_layout.addRow("Assign Reviewer:", self.reviewer_input)
+
+        self.commit_combo = QComboBox(self)
+        self.populate_commit_combo()
+        form_layout.addRow("Commit ID:", self.commit_combo)
+        
+        self.add_reviewer_button = QPushButton("Add Reviewer", self)
+        self.add_reviewer_button.clicked.connect(self.add_reviewer)
+        form_layout.addWidget(self.add_reviewer_button)
+
+        self.add_commit_button = QPushButton("Add Commit", self)
+        self.add_commit_button.clicked.connect(self.add_commit)
+        form_layout.addWidget(self.add_commit_button)
 
         self.confirm_button = QPushButton("Confirm", self)
         self.confirm_button.clicked.connect(self.confirm_review)
         center_layout.addWidget(self.confirm_button)
 
+        form_hbox = QHBoxLayout()
+        form_hbox.addStretch()
+        form_hbox.addWidget(form_widget)
+        form_hbox.addStretch()
+
+        center_layout.addLayout(form_hbox)
+        
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
 
         self.setLayout(layout)
 
+    def populate_commit_combo(self):
+        session = Session()
+        # FIXME
+        #commits = session.getReviewBuilder().fetch_commits_and_display(session.getUserID())
+        #if commits:
+        #    for commit in commits:
+        #        self.commit_combo.addItem(f"{commit[0]} - {commit[1]}")
+                
+    def add_reviewer(self):
+        reviewer = self.reviewer_input.text().strip()
+        if reviewer:
+            Session().getReviewBuilder().assign_reviewer(reviewer)
+            QMessageBox.information(self, "Reviewer Added", f"Reviewer '{reviewer}' added successfully.")
+            self.reviewer_input.clear()
+        else:
+            QMessageBox.warning(self, "Error", "Reviewer username cannot be empty.")
+
+    def add_commit(self):
+        commit_id = self.commit_input.text().strip()
+        if commit_id:
+            Session().getReviewBuilder().add_commit(commit_id)
+            QMessageBox.information(self, "Commit Added", f"Commit '{commit_id}' added successfully.")
+            self.commit_input.clear()
+        else:
+            QMessageBox.warning(self, "Error", "Commit ID cannot be empty.")
+            
     def confirm_review(self):
         reviewBuilder = Session().getReviewBuilder()
 
@@ -323,6 +414,7 @@ class AddNewReviewStep2Frame(QWidget):
         # TODO add commits and reviewers choice
         # reviewBuilder.add_commits()
         # reviewBuilder.add_reviewers()
+        reviewBuilder.add_author(Session().getUserID())
         reviewBuilder.build()
 
         # FIXME
@@ -981,6 +1073,10 @@ class MainWindow(QMainWindow):
         """Navigate to a specific frame by index."""
         if frame_index in self.frames:
             self.stacked_widget.setCurrentWidget(self.frames[frame_index])
+            
+    def show_repository_input_dialog(self):
+        dialog = RepositoryInputDialog(self)
+        dialog.exec_()
 
 
 def main():
