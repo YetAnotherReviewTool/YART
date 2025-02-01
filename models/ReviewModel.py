@@ -1,25 +1,36 @@
-from models import ReviewParticipantModel
-from models import CommentModel
+import ReviewParticipantModel 
+import CommentModel
 import enum
-import models.UserModel as UserModel
+import UserModel
 import datetime
+from DatabaseModelHelper import DatabaseHelper
 
 class ReviewStatus(enum.Enum):
     IN_REVIEW = enum.auto()
     APPROVED = enum.auto()
 
 class Review:
-    def __init__(self, title, description):
-        self.reviewId: int 
+    def __init__(self,
+                reviewId: int,
+                title: str,
+                description: str,
+                authorId: int,
+                status = ReviewStatus.IN_REVIEW.IN_REVIEW,
+                commitId = list(),
+                fileLink = "",
+                creationDate = datetime.datetime.today(),
+                reviewParticipants: list[int] = []
+                ):
+        
+        self.reviewId: int = reviewId
         self.title: str = title
         self.description: str = description
-        self.status: ReviewStatus = ReviewStatus.IN_REVIEW
-        self.commitId: list[int]
-        self.fileLink: str
-        self.creationDate: datetime.datetime = datetime.datetime.today()
-
-        self.authorId: int
-        self.reviewParticipants: list[int] #get from DB
+        self.status: ReviewStatus = status
+        self.commitId: list[int] = commitId
+        self.fileLink: str = fileLink
+        self.creationDate: datetime.datetime = creationDate
+        self.authorId: int = authorId
+        self.reviewParticipants: list[int] = reviewParticipants
 
     def assignReviewer(self, userID: int,
                        role: ReviewParticipantModel.ParticipantRole = ReviewParticipantModel.ParticipantRole.REVIEWER) -> None:
@@ -33,9 +44,10 @@ class Review:
             []
         )
 
-        #save new reviewer to DB TODO
+        DatabaseHelper.insertIntoDbFromModel(ReviewParticipantModel.ReviewParticipant, newParticipant)
 
         self.reviewParticipants.append(userID)
+        DatabaseHelper.updateDbRow(Review, self.reviewId, "reviewParticipants", self.reviewParticipants)
 
     def seeComments(self) -> list[CommentModel.Comment]:
         allComments = []
@@ -50,9 +62,13 @@ class Review:
         if userID not in self.reviewParticipants:
             raise UserModel.AccessError
         
-        # TODO
-        # add an entry to comments DB
-        # update reviewer comment ID list 
+        DatabaseHelper.insertIntoDbFromModel(CommentModel.Comment, comment)
+
+        #are we sure sure sure we want this here and not in ReviewParticipant??
+        #cause i gotta do this weird thing now to update the comment id list in DB
+
+        participantComments = DatabaseHelper.getModelsFromDbQuery(ReviewParticipantModel, "userId", userID).comments
+        DatabaseHelper.updateDbRow(ReviewParticipantModel.ReviewParticipant, userID, "comments", participantComments.append(comment.authorID))
 
     def evaluateReview(self) -> bool:
         """
@@ -67,13 +83,9 @@ class Review:
 
         self.status = ReviewStatus.APPROVED 
         return True
-    
-    def getFromDB(reviewID):
-        pass #TODO
-
-    def insertToDB(self):
-        pass #TODO
         
+    def getReviewParticipantS(self) -> list[ReviewParticipantModel.ReviewParticipant]:
+        return DatabaseHelper.getModelsFromDbQuery(ReviewParticipantModel.ReviewParticipant, "reviewId", self.reviewId)
 
 
     

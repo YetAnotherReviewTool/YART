@@ -1,5 +1,6 @@
 import enum
-from models import CommentModel
+import CommentModel
+from DatabaseModelHelper import DatabaseHelper
 
 class ParticipantRole(enum.Enum):
     AUTHOR = enum.auto()
@@ -12,19 +13,20 @@ class ParticipantStatus(enum.Enum):
     ACCEPTED = enum.auto()
 
 class ReviewParticipant:
-    def __init__(self, userId: int, role: ParticipantRole, isAccepted: ParticipantStatus):
-        self.userID: int = userId
+    def __init__(self, userID: int,
+                 reviewID: int,
+                 role: ParticipantRole,
+                 isAccepted: ParticipantStatus,
+                 comments: list[int] = []):
+        
+        self.userID: int = userID
+        self.reviewID: int = reviewID
         self.role: ParticipantRole = role
         self.status: ParticipantStatus = isAccepted
-        self.comments: list[int] #get from DB
+        
 
-        self.reviewID: int
+        self.comments: list[int] = comments
+
 
     def getComments(self):
-        return self.comments
-    
-    def getFromDB(reviewerID: int):
-        pass #TODO
-
-    def insertToDB(self):
-        pass #TODO
+        return DatabaseHelper.getModelsFromDbQuery(CommentModel.Comment, "authorID", self.userID)
