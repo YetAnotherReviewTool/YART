@@ -26,7 +26,7 @@ import sys
 from admin_backend import generate_report
 from config.settings import add_url
 from models.ReviewModel import Review
-from models.ReviewParticipantModel import ReviewParticipant
+from models.ReviewParticipantModel import ReviewParticipant, ParticipantStatus
 from services.git_service import RepositoryHelper
 from services.login_service import add_user
 from services.session_service import Session
@@ -748,6 +748,13 @@ class VerdictPopup(QDialog):
     def submit_verdict(self):
         verdict = self.verdict_combo.currentText()
         if verdict:
+            reviewParticipant: ReviewParticipant = getReviewParticipant(self.review.reviedId, Session().getUserID())
+
+            if self.verdict.lower() == "Accepted":
+                reviewParticipant.status = ParticipantStatus.ACCEPTED
+            else:
+                reviewParticipant.status = ParticipantStatus.REJECTED
+
             QMessageBox.information(self, "Verdict Submitted", f"The review has been {verdict.lower()}.")
             self.close()
         else:
