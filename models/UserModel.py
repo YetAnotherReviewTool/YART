@@ -1,6 +1,10 @@
 import models.ReviewModel as ReviewModel
 from models.DatabaseModelHelper import DatabaseHelper
 
+import secrets
+import hashlib
+import base64
+
 
 class AccessError(PermissionError):
     """
@@ -28,6 +32,13 @@ class User:
 
         self.reviews: list[int] = reviews
 
+    def new (self, username: str, password: str, admin: bool = False):
+        self.userID = DatabaseHelper.getNextId(User)
+        self.username = username
+        self.salt = secrets.token_urlsafe(16)
+        self.passwordHash = User.hash_password(self.salt, password)
+        self.admin = admin
+        self.reviews = []
     def createReview(self, title: str, description: str):
 
         from models.DatabaseModelHelper import DatabaseHelper
@@ -55,14 +66,18 @@ class User:
         
 
     def verifyPassword(self, passedPassword):
-        return User.passwordHashFunction(passedPassword) == self.passwordHash
-
+        return secrets.compare_digest(self.passwordHash, self.hash_password(self.salt, passedPassword))
     def getReviews(self) -> list:
         return DatabaseHelper.getModelsFromDbQuery(ReviewModel.Review, "authorID", self.userID)
     
-    def passwordHashFunction(plainText: str) -> str:
-        # Maybe put something fancier here? maybe TODO
-        return plainText
+    def hash_password(salt: str, pass_unhashed: str) -> str:
+        return str(
+            base64.urlsafe_b64encode(      
+                hashlib.sha256(
+                    salt + pass_unhashed.encode("utf-8")
+                ).digest()
+            )
+        )
         
 
 

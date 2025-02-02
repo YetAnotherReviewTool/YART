@@ -129,6 +129,8 @@ CREATE TABLE IF NOT EXISTS comments (
 				return None
 		
 		return by
+	
+	
 		
 	def getUserByID(self, userID: int) -> User:
 		self.cursor.execute(f"SELECT userID, username, password_hash, admin FROM users WHERE userID = {userID}")
@@ -188,6 +190,11 @@ CREATE TABLE IF NOT EXISTS comments (
 	def getReviewsByUserID(self, userID: int) -> List[Review]:
 		data = self.cursor.execute(f"SELECT reviewID FROM review_participants WHERE userID = {userID}").fetchall()
 		return [self.getReviewByID(reviewID) for reviewID in data]
+	
+	def insertUser(self, user: User):
+		self.cursor.execute(f"INSERT INTO users (userID, username, salt, password_hash, admin) VALUES ({user.userID}, '{user.username}', '{user.salt}', '{user.password_hash}', {user.admin})")
+		self.commit()
+
 
 
 	
