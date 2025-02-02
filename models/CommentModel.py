@@ -6,3 +6,6 @@ class Comment:
         self.authorID: int = authorID
         self.content: str = content
         self.timestamp: datetime.date = timestamp
+
+    def __str__(self):
+        return str(self.authorID) + " (" + str(self.timestamp) + ") " + ": " + self.content

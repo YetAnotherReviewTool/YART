@@ -26,6 +26,7 @@ import sys
 from admin_backend import generate_report
 from config.settings import add_url
 from models.ReviewModel import Review
+from models.ReviewParticipantModel import ReviewParticipant
 from services.git_service import RepositoryHelper
 from services.login_service import add_user
 from services.session_service import Session
@@ -188,7 +189,7 @@ class MainMenuFrame(QWidget):
         self.reviews = [
             Review(1, Session().getUserID(), "Review 1", "Description 1"),
             Review(2, Session().getUserID(), "Review 2", "Description 2"),
-            Review(3, Session().getUserID() + 3, "Review 3", "Description 3")
+            Review(3, Session().getUserID() + 3, "Review 3", "Description 3", reviewParticipants=[Session().getUserID()])
 
         ]
         # self.reviews = [
@@ -621,15 +622,15 @@ class ReviewEvaluationFrame(QWidget):
 
         self.setLayout(layout)
 
-    def set_review(self, review):
+    def set_review(self, review: Review):
         self.review = review
         self.review_details.setText(
-            f"Title: {review['title']}\n"
-            f"Author: {review['author']}\n"
-            f"Description: {review['description']}\n"
-            f"File Link: {review['fileLink']}\n"
-            f"Commit ID: {', '.join(map(str, review['commitId']))}\n"
-            f"Review Participants: {', '.join(map(str, review['reviewParticipants']))}\n"
+            f"Title: {review.title}\n"
+            f"Author: {review.authorId}\n"
+            f"Description: {review.description}\n"
+            f"File Link: {review.fileLink}\n"
+            f"Commit ID: {', '.join(map(str, review.commitId))}\n"
+            f"Review Participants: {', '.join(map(str, review.reviewParticipants))}\n"
         )
     def open_add_comment_popup(self):
         dialog = AddCommentPopup(self.main_window)
@@ -676,21 +677,19 @@ class AddCommentPopup(QDialog):
 
         self.setLayout(layout)
         
-    def set_review(self, review):
+    def set_review(self, review: Review):
         self.review = review
 
     def save_comment(self):
         comment_text = self.comment_input.toPlainText()
         if comment_text:
             session = Session()
-            comment = CommentModel.Comment(
-                reviewID=self.review["reviewId"],
-                authorID=session.getUserID(),
-                content=comment_text
-            )
-            self.review["comments"].append(comment_text)
-
-            session.getReviewBuilder().addComment(session.getUserID(), comment)
+            # comment = CommentModel.Comment(
+            #     reviewID=self.review.reviewId,
+            #     authorID=session.getUserID(),
+            #     content=comment_text
+            # )
+            self.review.addComments(session.getUserID(), comment_text)
             QMessageBox.information(self, "Comment Saved", "Your comment has been saved.")
             self.close()
         else:
@@ -741,10 +740,10 @@ class VerdictPopup(QDialog):
 
         self.setLayout(layout)
 
-    def set_review(self, review):
+    def set_review(self, review: Review):
         self.review = review
-        comments = review.get("comments", [])
-        self.comments_display.setText("\n".join(comments))
+        comments = review.seeComments()
+        self.comments_display.setText("\n".join([str(comment) for comment in comments]))
 
     def submit_verdict(self):
         verdict = self.verdict_combo.currentText()
