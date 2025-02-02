@@ -1,12 +1,6 @@
 import sqlite3
-from typing import Callable, Type
+import ReviewModel 
 
-from typing import List
-
-from models.CommentModel import Comment
-from models.ReviewModel import Review
-from models.UserModel import User
-from models.ReviewParticipantModel import ReviewParticipant, ParticipantRole
 
 DEFAULT_DB_PATH = "database.db"
 
@@ -76,7 +70,53 @@ CREATE TABLE IF NOT EXISTS comments (
 		"User": "users",
 		"ReviewParticipant": "review_participants",
 		"Review": "reviews"
+
 	}
+
+	def insertIntoTable(self, tableName: str,  jsonFormInstance: object):
+		columns = ", ".join(jsonFormInstance.keys())
+		placeholders = ", ".join(["?" for _ in jsonFormInstance.keys()])
+		values = tuple(jsonFormInstance.values())
+
+		sql = f"INSERT INTO {Database.TABLE_NAME_MAP[tableName]} ({columns}) VALUES ({placeholders})"
+
+		# Execute the SQL query
+		cursor = self.cursor
+		cursor.execute(sql, values)
+		self.conn.commit()
+
+
+	def getRowsFromTable(self, tableName: str) -> list:
+		self.conn.row_factory = sqlite3.Row
+		cursor = self.conn.cursor()
+		
+		query = f"SELECT * FROM {Database.TABLE_NAME_MAP[tableName]}"
+		cursor.execute(query)
+		rows = cursor.fetchall()
+		
+		return [dict(row) for row in rows]
+
+
+	def getRowsFromTableQuery(self, tableName: str, parameter: str, parameterValue: str) -> list:
+		self.conn.row_factory = sqlite3.Row
+		cursor = self.conn.cursor()
+		
+		query = f"SELECT * FROM {Database.TABLE_NAME_MAP[tableName]} WHERE {parameter} = ?"
+		cursor.execute(query, (parameterValue,))
+		rows = cursor.fetchall()
+		
+		return [dict(row) for row in rows]
+	
+	def getRowsFromTableQueries(self, tableName: str, parameters: list[str], parameterValues: list[str]) -> list:
+		self.conn.row_factory = sqlite3.Row
+		cursor = self.conn.cursor()
+		
+		conditions = " AND ".join([f"{param} = ?" for param in parameters])
+		query = f"SELECT * FROM {Database.TABLE_NAME_MAP[tableName]} WHERE {conditions}"
+		cursor.execute(query, parameterValues)
+		rows = cursor.fetchall()
+		
+		return [dict(row) for row in rows]
 
 	def getPrimaryKeyColumnName(self, model: Type) -> str:
 		"""
@@ -149,3 +189,7 @@ CREATE TABLE IF NOT EXISTS comments (
 	def __del__(self):
 
 		self.conn.close()
+
+DB = Database()
+DB.insertIntoTable("Review", ReviewModel.Review(1, 2, "asd", "asd,"))
+print(DB.getRowsFromTable("Review"))
