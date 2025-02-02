@@ -28,8 +28,6 @@ class DatabaseHelper:
         Return all review from the database. Not sure if useful. Felt cute, might delete later
         """
         # czekam na endpointy ale zakldam teraz ze to bedzie dict jsonwy gdzie klucze to kolumny #TODO
-
-        from models import ReviewModel
         rows = list(DatabaseHelper.getRowsFromDb(DatabaseHelper.modelToDbName(model)).values())
         return [model(*entry.values()) for entry in rows]
     
@@ -41,7 +39,6 @@ class DatabaseHelper:
         """
 
         # czekam na endpointy ale zakldam teraz ze to bedzie dict jsonwy gdzie klucze to kolumny
-        from models import ReviewModel
         rows = list(DatabaseHelper.getRowsFromDb(DatabaseHelper.modelToDbName(model), parameter, parameterValue).values()) #query the DB
         return [model(*entry.values()) for entry in rows]
 
