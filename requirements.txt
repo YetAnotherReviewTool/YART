@@ -12,3 +12,8 @@ GitPython
 
 # UI
 PyQt5
+
+# FastApi
+fastapi[all]
+pydantic[email]
+uvicorn

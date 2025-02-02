@@ -13,7 +13,7 @@ class ReviewStatus(enum.Enum):
 
 class Review:
     def __init__(self,
-                reviewId: int,
+                reviewID: int,
                 authorId: int = -1,
                 title: str = "",
                 description: str = "",
@@ -25,7 +25,7 @@ class Review:
                 comments: list[int] = []
                 ):
         
-        self.reviewId: int = reviewId
+        self.reviewID: int = reviewID
         self.title: str = title
         self.description: str = description
         self.status: ReviewStatus = status
@@ -51,7 +51,7 @@ class Review:
         DatabaseHelper.insertIntoDbFromModel(ReviewParticipantModel.ReviewParticipant, newParticipant)
 
         self.reviewParticipants.append(userID)
-        DatabaseHelper.updateDbRow(Review, self.reviewId, "reviewParticipants", self.reviewParticipants)
+        DatabaseHelper.updateDbRow(Review, self.reviewID, "reviewParticipants", self.reviewParticipants)
 
     def seeComments(self) -> list:
         return DatabaseHelper.getModelsFromDbQuery(CommentModel.Comment, "reviewID", self.reviewId)
@@ -84,7 +84,7 @@ class Review:
     def getReviewParticipantS(self) -> list:
 
         from models.DatabaseModelHelper import DatabaseHelper
-        return DatabaseHelper.getModelsFromDbQuery(ReviewParticipantModel.ReviewParticipant, "reviewId", self.reviewId)
+        return DatabaseHelper.getModelsFromDbQuery(ReviewParticipantModel.ReviewParticipant, "reviewId", self.reviewID)
 
 
     
