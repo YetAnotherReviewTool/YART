@@ -74,6 +74,15 @@ CREATE TABLE IF NOT EXISTS commits (
 	FOREIGN KEY(reviewID) REFERENCES reviews(reviewID)
 )""")
 	
+
+	def getUserByID(self, userID: int) -> User:
+		self.cursor.execute(f"SELECT userID, username, password_hash, admin FROM users WHERE userID = {userID}")
+		user = User(*self.cursor.fetchone())
+		self.cursor.execute(f"SELECT reviewID FROM reviews WHERE creatorID = {userID}")
+		user.reviews = [review[0] for review in self.cursor.fetchall()]
+		return user
+	
+	 
 	def commit(self):
 		self.conn.commit()
 	
