@@ -31,6 +31,10 @@ class ReviewBuilder:
     def assign_reviewer(self, reviewerID:str, role: ParticipantRole = ParticipantRole.REVIEWER):
         self._review.assignReviewer(int(reviewerID))
 
+    def build(self):
+        return
+        self.saveToDb()
+
     def saveToDb(self):
         # Call this after you're done with the Review object!! #TODO
         DatabaseHelper.insertIntoDbFromModel(Review, self._review)

@@ -413,20 +413,16 @@ class AddNewReviewStep2Frame(QWidget):
         reviewBuilder = Session().getReviewBuilder()
 
         reviewBuilder.add_author(Session().getUserID())
-        # TODO add commits and reviewers choice
-        # reviewBuilder.add_commits()
-        # reviewBuilder.add_reviewers()
-        reviewBuilder.add_author(Session().getUserID())
         reviewBuilder.build()
 
-        # FIXME
-        review = {
-            "title": self.main_window.frames[2].title_input.text(),
-            "detail2": self.main_window.frames[2].detail2_input.text(),
-            "detail3": self.main_window.frames[2].detail3_input.text(),
-            "author": self.main_window.frames[0].username_input.text(),
-        }
-        self.main_window.frames[1].reviews.append(review)
+        # # FIXME
+        # review = {
+        #     "title": self.main_window.frames[2].title_input.text(),
+        #     "detail2": self.main_window.frames[2].detail2_input.text(),
+        #     "detail3": self.main_window.frames[2].detail3_input.text(),
+        #     "author": self.main_window.frames[0].username_input.text(),
+        # }
+        # self.main_window.frames[1].reviews.append(review)
         QMessageBox.information(self, "Success", "Review added successfully!")
         self.main_window.navigate_to_frame(1)  # Navigate back to the main frame
 
@@ -456,13 +452,15 @@ class SettingsFrame(QWidget):
 
         form_widget = QWidget()
         form_layout = QFormLayout(form_widget)
-        self.password_input = QLineEdit(self)
-        self.password_input.setEchoMode(QLineEdit.Password)
-        self.options_combo = QComboBox(self)
-        self.options_combo.addItems(["Option 1", "Option 2", "Option 3"])
-
-        form_layout.addRow("Change Password:", self.password_input)
-        form_layout.addRow("Select Option:", self.options_combo)
+        self.old_password_input = QLineEdit(self)
+        self.old_password_input.setEchoMode(QLineEdit.Password)
+        self.new_password_input = QLineEdit(self)
+        self.new_password_input.setEchoMode(QLineEdit.Password)
+        #self.options_combo = QComboBox(self)
+        #self.options_combo.addItems(["Option 1", "Option 2", "Option 3"])
+        form_layout.addRow("Old Password:", self.old_password_input)
+        form_layout.addRow("New Password:", self.new_password_input)
+        #form_layout.addRow("Select Option:", self.options_combo)
 
         self.confirm_button = QPushButton("Confirm Change", self)
         self.confirm_button.clicked.connect(self.confirm_changes)
@@ -482,7 +480,12 @@ class SettingsFrame(QWidget):
         self.setLayout(layout)
 
     def confirm_changes(self):
-        QMessageBox.information(self, "Settings Updated", "Your settings have been updated.")
+        if all([self.new_password_input.text(), self.old_password_input.text()]):
+            if Session().user.change_password(self.new_password_input.text(), self.old_password_input.text()):
+                QMessageBox.information(self, "Settings Updated", "Successfully changed password!")
+            else:
+                QMessageBox.information(self, "Settings Updated", "Invalid current password.")
+        QMessageBox.information(self, "Invalid input", "Do not leave empty fields!")
 
 
 class AdminPanelFrame(QWidget):
