@@ -4,6 +4,8 @@ from git import Commit
 
 from models.ReviewModel import Review
 from models.DatabaseModelHelper import DatabaseHelper
+from models.ReviewParticipantModel import ParticipantRole
+from models.UserModel import User
 from services.git_service import RepositoryHelper
 
 
@@ -22,27 +24,13 @@ class ReviewBuilder:
     def add_author(self, user_id):
         self._review.authorId = user_id
 
-    def fetch_commits_and_display(
-        self, user: str
-    ) -> list[tuple[str, str | bytes | None, int | None]] | None:
-        """
-        Fetches commits and prepares them for display.
+    def add_commit(self, review_hex: str):
+        self._review.commitId.append(int(review_hex))
+        #  FIXME ?
 
-        Args:
-            user (str): user whose commits we should get
+    def assign_reviewer(self, reviewerID:str, role: ParticipantRole = ParticipantRole.REVIEWER):
+        self._review.assignReviewer(int(reviewerID))
 
-        Returns:
-            List[tuple] | None: list of commit details for display or None if there are no reviews
-        """
-        commits = self._helper.get_commits_by_user(user)
-
-        if len(commits) == 0:
-            return None
-
-        return [
-            (commit.hexsha, commit.message, commit.committed_date) for commit in commits
-        ]
-    
     def saveToDb(self):
         # Call this after you're done with the Review object!! #TODO
         DatabaseHelper.insertIntoDbFromModel(Review, self._review)

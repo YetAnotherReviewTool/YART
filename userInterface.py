@@ -25,10 +25,7 @@ import sys
 
 from admin_backend import generate_report
 from config.settings import add_url
-from models.ReviewModel import Review
-from models.UserModel import AccessError
 from services.git_service import RepositoryHelper
-from services.login_service import login
 from services.login_service import add_user
 from services.session_service import Session
 
@@ -82,6 +79,7 @@ QDialog {
     border-radius: 10px;
 }
 """
+
 
 class RepositoryInputDialog(QDialog):
     def __init__(self, main_window):
@@ -167,7 +165,7 @@ class LoginFrame(QWidget):
         #     self.main_window.user_role = result
         #     self.main_window.navigate_to_frame(1)
 
-        #just for testing
+        # just for testing
 
         if username == "admin" and password == "admin123":
             self.main_window.user_role = "Administrator"
@@ -349,7 +347,7 @@ class AddNewReviewStep2Frame(QWidget):
 
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
-        
+
         form_widget = QWidget()
         form_layout = QFormLayout(form_widget)
 
@@ -360,7 +358,7 @@ class AddNewReviewStep2Frame(QWidget):
         self.commit_combo = QComboBox(self)
         self.populate_commit_combo()
         form_layout.addRow("Commit ID:", self.commit_combo)
-        
+
         self.add_reviewer_button = QPushButton("Add Reviewer", self)
         self.add_reviewer_button.clicked.connect(self.add_reviewer)
         form_layout.addWidget(self.add_reviewer_button)
@@ -379,7 +377,7 @@ class AddNewReviewStep2Frame(QWidget):
         form_hbox.addStretch()
 
         center_layout.addLayout(form_hbox)
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -388,12 +386,11 @@ class AddNewReviewStep2Frame(QWidget):
 
     def populate_commit_combo(self):
         session = Session()
-        # FIXME
-        #commits = session.getReviewBuilder().fetch_commits_and_display(session.getUserID())
-        #if commits:
-        #    for commit in commits:
-        #        self.commit_combo.addItem(f"{commit[0]} - {commit[1]}")
-                
+        commits = RepositoryHelper().fetch_commits_and_display(session.user)
+        if commits:
+            for commit in commits:
+                self.commit_combo.addItem(f"{commit[0]} - {commit[1]}")
+
     def add_reviewer(self):
         reviewer = self.reviewer_input.text().strip()
         if reviewer:
@@ -411,7 +408,7 @@ class AddNewReviewStep2Frame(QWidget):
             self.commit_input.clear()
         else:
             QMessageBox.warning(self, "Error", "Commit cannot be empty.")
-            
+
     def confirm_review(self):
         reviewBuilder = Session().getReviewBuilder()
 
@@ -516,7 +513,7 @@ class AdminPanelFrame(QWidget):
         self.generate_report_button.clicked.connect(self.generate_report)
 
         center_layout.addWidget(self.generate_report_button)
-        
+
         self.username_input = QLineEdit(self)
         self.username_input.setPlaceholderText("Username")
         center_layout.addWidget(self.username_input)
@@ -547,7 +544,7 @@ class AdminPanelFrame(QWidget):
         else:
             QMessageBox.information(self, "Insufficient role", "The report could not been generated. You are not the "
                                                                "admin!")
-            
+
     def create_account(self):
         username = self.username_input.text()
         password = self.password_input.text()
@@ -1049,6 +1046,13 @@ class MainWindow(QMainWindow):
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
 
+        if Session().get_first_time():
+            self.show_repository_input_dialog()
+            RepositoryHelper(Session().get_path(), True, Session().get_url())
+            add_url(Session().get_path())
+        else:
+            RepositoryHelper(Session().get_path())
+
         # Create frames
         self.frames = {
             0: LoginFrame(self),
@@ -1075,18 +1079,12 @@ class MainWindow(QMainWindow):
         # Set the initial frame to F0 (Login)
         self.stacked_widget.setCurrentWidget(self.frames[0])
 
-        if Session().get_first_time():
-            self.show_repository_input_dialog()
-            RepositoryHelper(Session().get_path(), True, Session().get_url())
-            add_url(Session().get_path())
-        else:
-            RepositoryHelper(Session().get_path())
 
     def navigate_to_frame(self, frame_index):
         """Navigate to a specific frame by index."""
         if frame_index in self.frames:
             self.stacked_widget.setCurrentWidget(self.frames[frame_index])
-            
+
     def show_repository_input_dialog(self):
         dialog = RepositoryInputDialog(self)
         dialog.exec_()
