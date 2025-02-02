@@ -31,7 +31,7 @@ class ReviewBuilder:
         self._review.assignReviewer(int(reviewerID, 16))
 
     def build(self):
-        return
+        return self._review
         self.saveToDb()
 
     def saveToDb(self):

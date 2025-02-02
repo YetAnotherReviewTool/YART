@@ -427,17 +427,17 @@ class AddNewReviewStep2Frame(QWidget):
         # reviewBuilder.add_commits()
         # reviewBuilder.add_reviewers()
         # reviewBuilder.add_title_and_desc(self.main_window.frames[2].title_input.text(), self.main_window.frames[2].description_input.text())
-        reviewBuilder.build()
+        review = reviewBuilder.build()
 
         # FIXME
-        review = {
-            "title": reviewBuilder._review.title,
-            "description": reviewBuilder._review.description,
-            "fileLink": reviewBuilder._review.fileLink,
-            "author": Session().user.username,
-            "commitId": reviewBuilder._review.commitId,
-            "reviewParticipants": reviewBuilder._review.reviewParticipants,
-        }
+        # review = {
+        #     "title": reviewBuilder._review.title,
+        #     "description": reviewBuilder._review.description,
+        #     "fileLink": reviewBuilder._review.fileLink,
+        #     "author": Session().user.username,
+        #     "commitId": reviewBuilder._review.commitId,
+        #     "reviewParticipants": reviewBuilder._review.reviewParticipants,
+        # }
         self.main_window.frames[1].reviews.append(review)
         QMessageBox.information(self, "Success", "Review added successfully!")
         self.main_window.navigate_to_frame(1)  # Navigate back to the main frame
