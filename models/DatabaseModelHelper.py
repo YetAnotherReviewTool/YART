@@ -1,21 +1,10 @@
-
-
 class DatabaseHelper:
     """
     Class with generic methods to handle creating Models from DB and inserting into the DB based on the existing models
     """
 
     def modelToDbName(model) -> str:
-        from models import ReviewModel, CommentModel, ReviewParticipantModel, UserModel
-        match model:
-            case CommentModel.Comment:
-                return "Comment"
-            case ReviewParticipantModel.ReviewParticipant:
-                return "ParticipantModel"
-            case UserModel.User:
-                return "User"
-            case ReviewModel.Review:
-                return "Review"
+        return model.__name__
 
     def getRowsFromDb(model: type) -> dict:
         #mati pls #TODO
@@ -42,7 +31,7 @@ class DatabaseHelper:
 
         from models import ReviewModel
         rows = list(DatabaseHelper.getRowsFromDb(DatabaseHelper.modelToDbName(model)).values())
-        return [ReviewModel.Review(*entry.values()) for entry in rows]
+        return [model(*entry.values()) for entry in rows]
     
     def getModelsFromDbQuery(model: type, parameter: str, parameterValue: object) -> list:
         """
@@ -54,7 +43,7 @@ class DatabaseHelper:
         # czekam na endpointy ale zakldam teraz ze to bedzie dict jsonwy gdzie klucze to kolumny
         from models import ReviewModel
         rows = list(DatabaseHelper.getRowsFromDb(DatabaseHelper.modelToDbName(model), parameter, parameterValue).values()) #query the DB
-        return [ReviewModel.Review(*entry.values()) for entry in rows]
+        return [model(*entry.values()) for entry in rows]
 
     
     def insertIntoDbFromModel(model: type, instance: object) -> None:
@@ -92,3 +81,4 @@ class DatabaseHelper:
         """
 
         return DatabaseHelper.getRowFromDbByPrimaryKey(model, primaryKey)[parameter]
+    

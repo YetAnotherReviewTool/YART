@@ -1,3 +1,7 @@
+import models.ReviewModel as ReviewModel
+from models.DatabaseModelHelper import DatabaseHelper
+
+
 class AccessError(PermissionError):
     """
     Custom exception for handling inufficient permissions.
@@ -51,8 +55,6 @@ class User:
         return User.passwordHashFunction(passedPassword) == self.passwordHash
 
     def getReviews(self) -> list:
-        from models import ReviewModel
-        from models.DatabaseModelHelper import DatabaseHelper
         return DatabaseHelper.getModelsFromDbQuery(ReviewModel.Review, "authorID", self.userID)
     
     def passwordHashFunction(plainText: str) -> str:
