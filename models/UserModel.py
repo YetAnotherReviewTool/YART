@@ -1,8 +1,5 @@
-import ReviewModel
-from UserModel import User
-import datetime
-import ReviewModel
-from DatabaseModelHelper import DatabaseHelper
+import models.ReviewModel as ReviewModel
+from models.DatabaseModelHelper import DatabaseHelper
 
 
 class AccessError(PermissionError):
@@ -51,7 +48,7 @@ class User:
     def verifyPassword(self, passedPassword):
         return User.passwordHashFunction(passedPassword) == self.passwordHash
 
-    def getReviews(self) -> list[ReviewModel.Review]:
+    def getReviews(self) -> list:
         return DatabaseHelper.getModelsFromDbQuery(ReviewModel.Review, "authorID", self.userID)
     
     def passwordHashFunction(plainText: str) -> str:

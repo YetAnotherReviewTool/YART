@@ -1,6 +1,6 @@
 import enum
-import CommentModel
-from DatabaseModelHelper import DatabaseHelper
+import models.CommentModel as CommentModel
+from models.DatabaseModelHelper import DatabaseHelper
 
 class ParticipantRole(enum.Enum):
     AUTHOR = enum.auto()

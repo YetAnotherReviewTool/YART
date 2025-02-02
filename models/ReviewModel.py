@@ -1,9 +1,11 @@
-import ReviewParticipantModel 
-import CommentModel
+import models.CommentModel as CommentModel
+import models.UserModel as UserModel
+import models.ReviewParticipantModel as ReviewParticipantModel
+from models.DatabaseModelHelper import DatabaseHelper
 import enum
-import UserModel
 import datetime
-from DatabaseModelHelper import DatabaseHelper
+
+
 
 class ReviewStatus(enum.Enum):
     IN_REVIEW = enum.auto()
