@@ -855,7 +855,7 @@ class OwnReviewCommentsPopup(QDialog):
 
 
 class OwnReviewAddCommentPopup(QDialog):
-    """Frame F11: Own Review Edit"""
+    """Frame F11: Edit Review"""
 
     def __init__(self, main_window):
         super().__init__(main_window)
@@ -870,28 +870,45 @@ class OwnReviewAddCommentPopup(QDialog):
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
 
-        self.title_label = QLabel("Edit Title:", self)
-        center_layout.addWidget(self.title_label)
+        form_widget = QWidget()
+        form_layout = QFormLayout(form_widget)
+
         self.title_input = QLineEdit(self)
-        center_layout.addWidget(self.title_input)
+        self.description_input = QLineEdit(self)
+        self.file_link_input = QLineEdit(self)
+        self.reviewer_input = QLineEdit(self)
+        self.commit_combo = QComboBox(self)
 
-        self.detail2_label = QLabel("Edit Detail 2:", self)
-        center_layout.addWidget(self.detail2_label)
-        self.detail2_input = QLineEdit(self)
-        center_layout.addWidget(self.detail2_input)
+        form_layout.addRow("Title:", self.title_input)
+        form_layout.addRow("Description:", self.description_input)
+        form_layout.addRow("File Link:", self.file_link_input)
+        form_layout.addRow("Assign Reviewer:", self.reviewer_input)
+        form_layout.addRow("Commit ID:", self.commit_combo)
 
-        self.detail3_label = QLabel("Edit Detail 3:", self)
-        center_layout.addWidget(self.detail3_label)
-        self.detail3_input = QLineEdit(self)
-        center_layout.addWidget(self.detail3_input)
+        self.populate_commit_combo()
+
+        self.add_reviewer_button = QPushButton("Add Reviewer", self)
+        self.add_reviewer_button.clicked.connect(self.add_reviewer)
+        form_layout.addWidget(self.add_reviewer_button)
+
+        self.add_commit_button = QPushButton("Add Commit", self)
+        self.add_commit_button.clicked.connect(self.add_commit)
+        form_layout.addWidget(self.add_commit_button)
 
         self.save_button = QPushButton("Save", self)
         self.save_button.clicked.connect(self.save_review)
-        center_layout.addWidget(self.save_button)
+        form_layout.addWidget(self.save_button)
 
         self.cancel_button = QPushButton("Cancel", self)
         self.cancel_button.clicked.connect(self.close)
-        center_layout.addWidget(self.cancel_button)
+        form_layout.addWidget(self.cancel_button)
+
+        form_hbox = QHBoxLayout()
+        form_hbox.addStretch()
+        form_hbox.addWidget(form_widget)
+        form_hbox.addStretch()
+
+        center_layout.addLayout(form_hbox)
 
         layout.addStretch()
         layout.addLayout(center_layout)
@@ -901,15 +918,43 @@ class OwnReviewAddCommentPopup(QDialog):
 
     def set_review(self, review):
         self.review = review
-        self.title_input.setText(review.get("title", ""))
-        self.detail2_input.setText(review.get("detail2", ""))
-        self.detail3_input.setText(review.get("detail3", ""))
+        self.title_input.setText(review.title)
+        self.description_input.setText(review.description)
+        self.file_link_input.setText(review.fileLink)
+
+    def populate_commit_combo(self):
+        session = Session()
+        commits = RepositoryHelper().fetch_commits_and_display(session.user)
+        if commits:
+            for commit in commits:
+                self.commit_combo.addItem(f"{commit[0]} - {commit[1]}")
+
+    def add_reviewer(self):
+        reviewer = self.reviewer_input.text().strip()
+        if reviewer:
+            self.review.assignReviewer(reviewer)
+            QMessageBox.information(self, "Reviewer Added", f"Reviewer '{reviewer}' added successfully.")
+            self.reviewer_input.clear()
+        else:
+            QMessageBox.warning(self, "Error", "Reviewer username cannot be empty.")
+
+    def add_commit(self):
+        commit_id = self.commit_combo.currentText().split(" - ")[0]
+        if commit_id:
+            self.review.add_commit(commit_id)
+            QMessageBox.information(self, "Commit Added", f"Commit '{commit_id}' added successfully.")
+        else:
+            QMessageBox.warning(self, "Error", "Commit ID cannot be empty.")
 
     def save_review(self):
         if self.review:
-            self.review["title"] = self.title_input.text().strip()
-            self.review["detail2"] = self.detail2_input.text().strip()
-            self.review["detail3"] = self.detail3_input.text().strip()
+            self.review.title = self.title_input.text().strip()
+            self.review.description = self.description_input.text().strip()
+            self.review.fileLink = self.file_link_input.text().strip()
+            # FIXME Update when database is implemented
+            #DatabaseHelper.updateDbRow(Review, self.review.reviewId, "title", self.review.title)
+            #DatabaseHelper.updateDbRow(Review, self.review.reviewId, "description", self.review.description)
+            #DatabaseHelper.updateDbRow(Review, self.review.reviewId, "fileLink", self.review.fileLink)
             QMessageBox.information(self, "Review Updated", "Your review has been updated.")
             self.close()
         else:
