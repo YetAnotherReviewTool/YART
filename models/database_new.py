@@ -1,6 +1,4 @@
 import sqlite3
-import ReviewModel 
-
 
 DEFAULT_DB_PATH = "database.db"
 
@@ -70,7 +68,6 @@ CREATE TABLE IF NOT EXISTS comments (
 		"User": "users",
 		"ReviewParticipant": "review_participants",
 		"Review": "reviews"
-
 	}
 
 	def insertIntoTable(self, tableName: str,  jsonFormInstance: object):
@@ -84,6 +81,7 @@ CREATE TABLE IF NOT EXISTS comments (
 		cursor = self.cursor
 		cursor.execute(sql, values)
 		self.conn.commit()
+		
 
 
 	def getRowsFromTable(self, tableName: str) -> list:
@@ -118,7 +116,8 @@ CREATE TABLE IF NOT EXISTS comments (
 		
 		return [dict(row) for row in rows]
 
-	def getPrimaryKeyColumnName(self, model: Type) -> str:
+
+	def getPrimaryKeyColumnName(self, model: type) -> str:
 		"""
         Returns the primary key column name for the table of the given model.
         """
@@ -177,9 +176,7 @@ CREATE TABLE IF NOT EXISTS comments (
 
 	def commit(self):
 		self.conn.commit()
-	
-	def test(self):
-		a = self.getBy(Review)("reviewID", 1)
+
 	def rollback(self):
 		self.conn.rollback()
 	
@@ -189,7 +186,3 @@ CREATE TABLE IF NOT EXISTS comments (
 	def __del__(self):
 
 		self.conn.close()
-
-DB = Database()
-DB.insertIntoTable("Review", ReviewModel.Review(1, 2, "asd", "asd,"))
-print(DB.getRowsFromTable("Review"))

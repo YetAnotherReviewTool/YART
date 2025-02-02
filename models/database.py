@@ -66,37 +66,16 @@ CREATE TABLE IF NOT EXISTS comments (
 	FOREIGN KEY(authorID) REFERENCES users(userID)
 )""")	
 
+
 		return
 	
-<<<<<<< Updated upstream
-=======
-	def __init__(self, db_path: str | None = None):
-		if db_path is None:
-			db_path = DEFAULT_DB_PATH
-		self.conn = sqlite3.connect(db_path)
-		self.cursor = self.conn.cursor()
-		self.cursor.execute("PRAGMA foreign_keys = ON")
->>>>>>> Stashed changes
+	
 
 
 	### Some funny method but might be too hard to make it work
 	# basically Database.get(Comment).by("reviewID", 1)
 	# and Database.get(User).by("username", "Mateusz")
 
-<<<<<<< Updated upstream
-	
-	def getBy(self, model_class: type) -> Callable[..., list]:
-		def conditions(field: str, value,  **params) -> list:
-			table_name = f"{self.model.__name__.lower()}s"
-			condition = f"{field} = ?"
-			wildcards = [value]
-			
-			# Handle potential multiple conditions
-			if params:
-				additional_conditions = [f"{key} = ?" for key, val in params.items()]
-				condition = f"{condition} AND {' AND '.join(additional_conditions)}"
-				wildcards.extend([val for val in params.values()])
-=======
 
 	# def getBy(self, model_class: type) -> Callable[[str], object]:
 	# 	def by(field: str, value,  **params):
@@ -109,21 +88,9 @@ CREATE TABLE IF NOT EXISTS comments (
 	# 			additional_conditions = [f"{key} = ?" for key, val in params.items()]
 	# 			condition = f"{condition} AND {' AND '.join(additional_conditions)}"
 	# 			placeholders.extend([val for val in params.values()])
->>>>>>> Stashed changes
 			
 	# 		query = f"SELECT * FROM {table_name} WHERE {condition}"
 			
-<<<<<<< Updated upstream
-			self.cursor.execute(query, wildcards)
-			results = self.cursor.fetchall()
-			
-			if results:
-				outputs: list = []
-				if model_class is User:
-					for result in results:
-						join1 = [review[0] for review in self.cursor.execute(f"SELECT reviewID FROM review_participants WHERE userID = {result[0]}").fetchall()]
-						outputs.append(User(userID=result[0], username=result[1], password_hash=result[2], admin=result[3], reviews=join1))
-=======
 	# 		self.cursor.execute(query, placeholders)
 	# 		results = self.cursor.fetchall()
 			
@@ -133,7 +100,6 @@ CREATE TABLE IF NOT EXISTS comments (
 	# 				for result in results:
 	# 					join1 = [review[0] for review in self.cursor.execute(f"SELECT reviewID FROM review_participants WHERE userID = {result[0]}").fetchall()]
 	# 					outputs.append(User(userID=result[0], username=result[1], password_hash=result[2], admin=result[3], reviews=join1))
->>>>>>> Stashed changes
 
 	# 			elif model_class is Review:
 	# 				for result in results:
@@ -152,11 +118,7 @@ CREATE TABLE IF NOT EXISTS comments (
 	# 		else:
 	# 			return None
 		
-<<<<<<< Updated upstream
-		return conditions
-=======
 	# 	return by
->>>>>>> Stashed changes
 	
 	# def getUserByID(self, userID: int) -> User:
 	# 	self.cursor.execute(f"SELECT userID, username, password_hash, admin FROM users WHERE userID = {userID}")
@@ -225,81 +187,11 @@ CREATE TABLE IF NOT EXISTS comments (
 		self.conn.row_factory = sqlite3.Row
 		cursor = self.conn.cursor()
 		
-<<<<<<< Updated upstream
-	def getUserByID(self, userID: int) -> User:
-		self.cursor.execute(f"SELECT userID, username, password_hash, admin FROM users WHERE userID = {userID}")
-		user = User(*self.cursor.fetchone())
-		self.cursor.execute(f"SELECT reviewID FROM reviews WHERE creatorID = {userID}")
-		user.reviews = [review[0] for review in self.cursor.fetchall()]
-		return user
-	
-	def getUserByUsername(self, username: str) -> User:
-		self.cursor.execute(f"SELECT userID, username, password_hash, admin FROM users WHERE username = '{username}'")
-		user = User(*self.cursor.fetchone())
-		self.cursor.execute(f"SELECT reviewID FROM reviews WHERE creatorID = {user.userID}")
-		user.reviews = [review[0] for review in self.cursor.fetchall()]
-		return user
-	
-	def getReviewByID(self, reviewID: int) -> Review:
-		data = self.cursor.execute(f"""SELECT 
-							reviewID 
-							title 
-							description
-							status 
-							file_path 
-							creation_date 
-							creatorID 
-					 	FROM reviews 
-					  	WHERE reviewID = {reviewID}""").fetchone()
-		join1 = [reviewer[0] for reviewer in self.cursor.execute(f"SELECT userID FROM review_participants WHERE reviewID = {reviewID}").fetchall()]
-		review = Review(reviewID=data[0], title=data[1], description=data[2], status=data[3], fileLink=data[4], creationDate=data[5], authorId=data[6], reviewParticipants=join1, commitId=[])
-		return review
-	
-	def getReviewByTitle(self, title: str) -> Review:
-		data = self.cursor.execute(f"""SELECT 
-							reviewID 
-							title 
-							description
-							status 
-							file_path 
-							creation_date 
-							creatorID 
-					 	FROM reviews 
-					  	WHERE title = '{title}'""").fetchone()
-		join1 = [reviewer[0] for reviewer in self.cursor.execute(f"SELECT userID FROM review_participants WHERE reviewID = {data[0]}").fetchall()]
-		review = Review(reviewID=data[0], title=data[1], description=data[2], status=data[3], fileLink=data[4], creationDate=data[5], authorId=data[6], reviewParticipants=join1, commitId=[])
-		return review
-
-	def getCommentByID(self, reviewID: int) -> Comment:
-		data = self.cursor.execute(f"SELECT commentID, reviewID, authorID, content, timestamp FROM comments WHERE reviewID = {reviewID}").fetchone()
-		return Comment(commentID=data[0], reviewID=data[1], authorID=data[2], content=data[3], timestamp=data[4])
-
-	def getCommentsByReviewID(self, reviewID: int) -> List[Comment]:
-		data = self.cursor.execute(f"SELECT commentID, reviewID, authorID, content, timestamp FROM comments WHERE reviewID = {reviewID}").fetchall()
-		return [Comment(commentID=data[0], reviewID=data[1], authorID=data[2], content=data[3], timestamp=data[4]) for data in data]
-	def getReviewParticipants(self, reviewID: int) -> List[ReviewParticipant]:
-		data = self.cursor.execute(f"SELECT userID, role FROM review_participants WHERE reviewID = {reviewID}").fetchall()
-		return [ReviewParticipant(reviewID=reviewID, userID=userID, role=role) for userID, role in data]
-	
-	def getReviewsByUserID(self, userID: int) -> List[Review]:
-		data = self.cursor.execute(f"SELECT reviewID FROM review_participants WHERE userID = {userID}").fetchall()
-		return [self.getReviewByID(reviewID) for reviewID in data]
-	
-	def insertUser(self, user: User) -> bool:
-		try:
-			self.cursor.execute(f"INSERT INTO users (userID, username, salt, password_hash, admin) VALUES ({user.userID}, '{user.username}', '{user.salt}', '{user.password_hash}', {user.admin})")
-			logging.error(f"Failed to insert User({user.username}, {user.password_hash}, {user.salt}, {user.admin})")
-			return True
-		finally:
-			return False
-
-=======
 		query = f"SELECT * FROM {tableName}"
 		cursor.execute(query)
 		rows = cursor.fetchall()
 		
 		return [dict(row) for row in rows]
->>>>>>> Stashed changes
 
 
 	def getRowsFromTableQuery(self, tableName: str, parameter: str, parameterValue: str) -> list:
@@ -354,3 +246,4 @@ db = Database()
 db.create_tables()
 db.insertTestData()
 print(db.getRowsFromTable("reviews"))
+

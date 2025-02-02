@@ -68,9 +68,7 @@ class DatabaseHelper:
         """
         dictForm = {key: value for key, value in instance.__dict__.items()}
 
-        # do insert stuff when I get endpoints #TODO
-
-        return dict
+        DatabaseHelper.DBInstance.insertIntoTable(DatabaseHelper.modelToDbName(model), dictForm)
 
     def updateDbRow(model: type, primaryKeyValue: int, parameterToChange: str, parameterValue: object):
         return DatabaseHelper.DBInstance.updateDbRow(model, primaryKeyValue, parameterToChange, parameterValue)
