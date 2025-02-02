@@ -27,9 +27,12 @@ class User:
 
     def createReview(self, title: str, description: str):
 
+        from models.DatabaseModelHelper import DatabaseHelper
+        from models import ReviewModel
         id = DatabaseHelper.getNextId(ReviewModel.Review)
         newReview = ReviewModel.Review(id, title, description, self.userID)
         self.reviews.append(id)
+
         DatabaseHelper.updateDbRow(User, self.userID, "reviews", self.reviews)
 
         DatabaseHelper.insertIntoDbFromModel(ReviewModel.Review, newReview)
@@ -39,6 +42,9 @@ class User:
         if User.verifyPassword(old_password):
             newPasswordHash =  User.passwordHashFunction(new_password)
             self.passwordHash = newPasswordHash
+
+            from models.DatabaseModelHelper import DatabaseHelper
+
             DatabaseHelper.updateDbRow(User, self.userID, "passwordHash", newPasswordHash)
             return True
         else:

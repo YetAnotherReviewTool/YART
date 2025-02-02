@@ -1,4 +1,5 @@
 from models.ReviewModel import Review
+from models.UserModel import User
 from services.git_service import RepositoryHelper
 from services.review_service import ReviewBuilder
 from services.singleton import singleton
@@ -6,13 +7,14 @@ from services.singleton import singleton
 
 @singleton
 class Session:
-    userID = None
-    reviewBuilder = None
+    user = User(1, "SJCaldwell", "ADB123")
+    reviewBuilder: ReviewBuilder
     is_first_time = False
 
     def __init__(self):
         self.path = None
         self.url = None
+        self.reviewBuilder = None
 
     def getReviewBuilder(self):
         return self.reviewBuilder
@@ -21,10 +23,10 @@ class Session:
         self.reviewBuilder = ReviewBuilder(RepositoryHelper(), title, description)
 
     def getUserID(self):
-        return self.userID
+        return self.user.userID
 
-    def setUserID(self, new_user_id):
-        self.userID = new_user_id
+    def setUserID(self, new_user):
+        self.user = new_user
 
     def set_first_time(self):
         self.is_first_time = True

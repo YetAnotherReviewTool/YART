@@ -44,6 +44,8 @@ def configure_repository(repo):
         raise ValueError("No url provided. Git repository could not be located.")
 
     file_path = repo.get("file_path")
+    if file_path is not None and not os.path.isdir(file_path) or not os.listdir(file_path):
+        file_path = None
 
     return url, file_path
 

@@ -25,10 +25,7 @@ import sys
 
 from admin_backend import generate_report
 from config.settings import add_url
-from models.ReviewModel import Review
-from models.UserModel import AccessError
 from services.git_service import RepositoryHelper
-from services.login_service import login
 from services.login_service import add_user
 from services.session_service import Session
 
@@ -82,6 +79,7 @@ QDialog {
     border-radius: 10px;
 }
 """
+
 
 class RepositoryInputDialog(QDialog):
     def __init__(self, main_window):
@@ -167,7 +165,7 @@ class LoginFrame(QWidget):
         #     self.main_window.user_role = result
         #     self.main_window.navigate_to_frame(1)
 
-        #just for testing
+        # just for testing
 
         if username == "admin" and password == "admin123":
             self.main_window.user_role = "Administrator"
@@ -289,12 +287,12 @@ class AddNewReviewFrame(QWidget):
         form_widget = QWidget()
         form_layout = QFormLayout(form_widget)
         self.title_input = QLineEdit(self)
-        self.detail2_input = QLineEdit(self)
-        self.detail3_input = QLineEdit(self)
+        self.description_input = QLineEdit(self)
+        self.file_link_input = QLineEdit(self)
 
         form_layout.addRow("Title:", self.title_input)
-        form_layout.addRow("Description:", self.detail2_input)
-        # form_layout.addRow("Detail 3:", self.detail3_input)
+        form_layout.addRow("Description:", self.description_input)
+        form_layout.addRow("File Link:", self.file_link_input)
 
         self.next_button = QPushButton("Next", self)
         self.next_button.clicked.connect(self.validate_and_proceed)
@@ -314,12 +312,14 @@ class AddNewReviewFrame(QWidget):
         self.setLayout(layout)
 
     def validate_and_proceed(self):
-        if all([self.title_input.text(), self.detail2_input.text()]):
+        if all([self.title_input.text(), self.description_input.text(), self.file_link_input.text()]):
             session = Session()
             if session.getReviewBuilder() is None:
-                session.initReviewBuilder(self.title_input.text(), self.detail2_input.text())
+                session.initReviewBuilder(self.title_input.text(), self.description_input.text())
+                session.getReviewBuilder()._review.fileLink = self.file_link_input.text()
             else:
-                session.getReviewBuilder().set_title_and_desc(self.title_input.text(), self.detail2_input.text())
+                session.getReviewBuilder().add_title_and_desc(self.title_input.text(), self.description_input.text())
+                session.getReviewBuilder()._review.fileLink = self.file_link_input.text()
 
             self.main_window.navigate_to_frame(3)  # Navigate to Frame F3
         else:
@@ -349,7 +349,7 @@ class AddNewReviewStep2Frame(QWidget):
 
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
-        
+
         form_widget = QWidget()
         form_layout = QFormLayout(form_widget)
 
@@ -360,7 +360,7 @@ class AddNewReviewStep2Frame(QWidget):
         self.commit_combo = QComboBox(self)
         self.populate_commit_combo()
         form_layout.addRow("Commit ID:", self.commit_combo)
-        
+
         self.add_reviewer_button = QPushButton("Add Reviewer", self)
         self.add_reviewer_button.clicked.connect(self.add_reviewer)
         form_layout.addWidget(self.add_reviewer_button)
@@ -371,7 +371,7 @@ class AddNewReviewStep2Frame(QWidget):
 
         self.confirm_button = QPushButton("Confirm", self)
         self.confirm_button.clicked.connect(self.confirm_review)
-        center_layout.addWidget(self.confirm_button)
+        form_layout.addWidget(self.confirm_button)
 
         form_hbox = QHBoxLayout()
         form_hbox.addStretch()
@@ -379,7 +379,7 @@ class AddNewReviewStep2Frame(QWidget):
         form_hbox.addStretch()
 
         center_layout.addLayout(form_hbox)
-        
+
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -388,12 +388,11 @@ class AddNewReviewStep2Frame(QWidget):
 
     def populate_commit_combo(self):
         session = Session()
-        # FIXME
-        #commits = session.getReviewBuilder().fetch_commits_and_display(session.getUserID())
-        #if commits:
-        #    for commit in commits:
-        #        self.commit_combo.addItem(f"{commit[0]} - {commit[1]}")
-                
+        commits = RepositoryHelper().fetch_commits_and_display(session.user)
+        if commits:
+            for commit in commits:
+                self.commit_combo.addItem(f"{commit[0]} - {commit[1]}")
+
     def add_reviewer(self):
         reviewer = self.reviewer_input.text().strip()
         if reviewer:
@@ -404,14 +403,14 @@ class AddNewReviewStep2Frame(QWidget):
             QMessageBox.warning(self, "Error", "Reviewer username cannot be empty.")
 
     def add_commit(self):
-        commit_id = self.commit_input.text().strip()
+        commit_id = self.commit_combo.currentText().split(" - ")[0]
         if commit_id:
             Session().getReviewBuilder().add_commit(commit_id)
             QMessageBox.information(self, "Commit Added", f"Commit '{commit_id}' added successfully.")
-            self.commit_input.clear()
         else:
-            QMessageBox.warning(self, "Error", "Commit cannot be empty.")
-            
+            QMessageBox.warning(self, "Error", "Commit ID cannot be empty.")
+
+
     def confirm_review(self):
         reviewBuilder = Session().getReviewBuilder()
 
@@ -419,15 +418,17 @@ class AddNewReviewStep2Frame(QWidget):
         # TODO add commits and reviewers choice
         # reviewBuilder.add_commits()
         # reviewBuilder.add_reviewers()
-        reviewBuilder.add_author(Session().getUserID())
+        # reviewBuilder.add_title_and_desc(self.main_window.frames[2].title_input.text(), self.main_window.frames[2].description_input.text())
         reviewBuilder.build()
 
         # FIXME
         review = {
-            "title": self.main_window.frames[2].title_input.text(),
-            "detail2": self.main_window.frames[2].detail2_input.text(),
-            "detail3": self.main_window.frames[2].detail3_input.text(),
-            "author": self.main_window.frames[0].username_input.text(),
+            "title": reviewBuilder._review.title,
+            "description": reviewBuilder._review.description,
+            "fileLink": reviewBuilder._review.fileLink,
+            "author": Session().user.username,
+            "commitId": reviewBuilder._review.commitId,
+            "reviewParticipants": reviewBuilder._review.reviewParticipants,
         }
         self.main_window.frames[1].reviews.append(review)
         QMessageBox.information(self, "Success", "Review added successfully!")
@@ -459,13 +460,15 @@ class SettingsFrame(QWidget):
 
         form_widget = QWidget()
         form_layout = QFormLayout(form_widget)
-        self.password_input = QLineEdit(self)
-        self.password_input.setEchoMode(QLineEdit.Password)
-        self.options_combo = QComboBox(self)
-        self.options_combo.addItems(["Option 1", "Option 2", "Option 3"])
-
-        form_layout.addRow("Change Password:", self.password_input)
-        form_layout.addRow("Select Option:", self.options_combo)
+        self.old_password_input = QLineEdit(self)
+        self.old_password_input.setEchoMode(QLineEdit.Password)
+        self.new_password_input = QLineEdit(self)
+        self.new_password_input.setEchoMode(QLineEdit.Password)
+        #self.options_combo = QComboBox(self)
+        #self.options_combo.addItems(["Option 1", "Option 2", "Option 3"])
+        form_layout.addRow("Old Password:", self.old_password_input)
+        form_layout.addRow("New Password:", self.new_password_input)
+        #form_layout.addRow("Select Option:", self.options_combo)
 
         self.confirm_button = QPushButton("Confirm Change", self)
         self.confirm_button.clicked.connect(self.confirm_changes)
@@ -485,7 +488,12 @@ class SettingsFrame(QWidget):
         self.setLayout(layout)
 
     def confirm_changes(self):
-        QMessageBox.information(self, "Settings Updated", "Your settings have been updated.")
+        if all([self.new_password_input.text(), self.old_password_input.text()]):
+            if Session().user.change_password(self.new_password_input.text(), self.old_password_input.text()):
+                QMessageBox.information(self, "Settings Updated", "Successfully changed password!")
+            else:
+                QMessageBox.information(self, "Settings Updated", "Invalid current password.")
+        QMessageBox.information(self, "Invalid input", "Do not leave empty fields!")
 
 
 class AdminPanelFrame(QWidget):
@@ -516,7 +524,7 @@ class AdminPanelFrame(QWidget):
         self.generate_report_button.clicked.connect(self.generate_report)
 
         center_layout.addWidget(self.generate_report_button)
-        
+
         self.username_input = QLineEdit(self)
         self.username_input.setPlaceholderText("Username")
         center_layout.addWidget(self.username_input)
@@ -547,7 +555,7 @@ class AdminPanelFrame(QWidget):
         else:
             QMessageBox.information(self, "Insufficient role", "The report could not been generated. You are not the "
                                                                "admin!")
-            
+
     def create_account(self):
         username = self.username_input.text()
         password = self.password_input.text()
@@ -607,8 +615,14 @@ class ReviewEvaluationFrame(QWidget):
 
     def set_review(self, review):
         self.review = review
-        self.review_details.setText(f"Title: {review['title']}\nAuthor: {review['author']}")
-
+        self.review_details.setText(
+            f"Title: {review['title']}\n"
+            f"Author: {review['author']}\n"
+            f"Description: {review['description']}\n"
+            f"File Link: {review['fileLink']}\n"
+            f"Commit ID: {', '.join(map(str, review['commitId']))}\n"
+            f"Review Participants: {', '.join(map(str, review['reviewParticipants']))}\n"
+        )
     def open_add_comment_popup(self):
         dialog = AddCommentPopup(self.main_window)
         dialog.exec_()
@@ -765,7 +779,14 @@ class OwnReviewEditFrame(QWidget):
 
     def set_review(self, review):
         self.review = review
-        self.review_details.setText(f"Title: {review['title']}\nAuthor: {review['author']}")
+        self.review_details.setText(
+            f"Title: {review['title']}\n"
+            f"Author: {review['author']}\n"
+            f"Description: {review['description']}\n"
+            f"File Link: {review['fileLink']}\n"
+            f"Commit ID: {', '.join(map(str, review['commitId']))}\n"
+            f"Review Participants: {', '.join(map(str, review['reviewParticipants']))}\n"
+        )
 
     def open_edit_review_popup(self):
         dialog = OwnReviewAddCommentPopup(self.main_window)
@@ -975,7 +996,12 @@ class ViewReviewDetailsFrame(QWidget):
     def set_review(self, review):
         self.review = review
         self.review_details.setText(
-            f"Title: {review['title']}\nAuthor: {review['author']}\nDetail 2: {review.get('detail2', '')}\nDetail 3: {review.get('detail3', '')}"
+            f"Title: {review['title']}\n"
+            f"Author: {review['author']}\n"
+            f"Description: {review['description']}\n"
+            f"File Link: {review['fileLink']}\n"
+            f"Commit ID: {', '.join(map(str, review['commitId']))}\n"
+            f"Review Participants: {', '.join(map(str, review['reviewParticipants']))}\n"
         )
 
     def showEvent(self, event):
@@ -1049,6 +1075,13 @@ class MainWindow(QMainWindow):
         self.stacked_widget = QStackedWidget()
         self.setCentralWidget(self.stacked_widget)
 
+        if Session().get_first_time():
+            self.show_repository_input_dialog()
+            RepositoryHelper(Session().get_path(), True, Session().get_url())
+            add_url(Session().get_path())
+        else:
+            RepositoryHelper(Session().get_path())
+
         # Create frames
         self.frames = {
             0: LoginFrame(self),
@@ -1075,18 +1108,12 @@ class MainWindow(QMainWindow):
         # Set the initial frame to F0 (Login)
         self.stacked_widget.setCurrentWidget(self.frames[0])
 
-        if Session().get_first_time():
-            self.show_repository_input_dialog()
-            RepositoryHelper(Session().get_path(), True, Session().get_url())
-            add_url(Session().get_path())
-        else:
-            RepositoryHelper(Session().get_path())
 
     def navigate_to_frame(self, frame_index):
         """Navigate to a specific frame by index."""
         if frame_index in self.frames:
             self.stacked_widget.setCurrentWidget(self.frames[frame_index])
-            
+
     def show_repository_input_dialog(self):
         dialog = RepositoryInputDialog(self)
         dialog.exec_()

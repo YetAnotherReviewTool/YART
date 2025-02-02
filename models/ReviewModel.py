@@ -46,13 +46,16 @@ class Review:
             []
         )
 
+        from models.DatabaseModelHelper import DatabaseHelper
+
         DatabaseHelper.insertIntoDbFromModel(ReviewParticipantModel.ReviewParticipant, newParticipant)
 
         self.reviewParticipants.append(userID)
         DatabaseHelper.updateDbRow(Review, self.reviewId, "reviewParticipants", self.reviewParticipants)
 
-    def seeComments(self) -> list[CommentModel.Comment]:
+    def seeComments(self) -> list:
         allComments = []
+
 
         for participant in self.reviewParticipants:
             for comment in participant.getComments():
@@ -60,10 +63,14 @@ class Review:
 
         return allComments
     
-    def addComments(self, userID: int, comment: CommentModel.Comment):
+    def addComments(self, userID: int, comment):
         if userID not in self.reviewParticipants:
+            from models import UserModel
             raise UserModel.AccessError
-        
+
+        from models.DatabaseModelHelper import DatabaseHelper
+        from models import CommentModel
+
         DatabaseHelper.insertIntoDbFromModel(CommentModel.Comment, comment)
 
         #are we sure sure sure we want this here and not in ReviewParticipant??
@@ -79,6 +86,7 @@ class Review:
         when all ReviewParticipants accept it? so thats what imma do here
         """
         for reviewerID in self.reviewParticipants:
+
             participant = ReviewParticipantModel.getFromDB(reviewerID)
             if participant.status != ReviewParticipantModel.ParticipantStatus.ACCEPTED:
                 return False
@@ -86,7 +94,9 @@ class Review:
         self.status = ReviewStatus.APPROVED 
         return True
         
-    def getReviewParticipantS(self) -> list[ReviewParticipantModel.ReviewParticipant]:
+    def getReviewParticipantS(self) -> list:
+
+        from models.DatabaseModelHelper import DatabaseHelper
         return DatabaseHelper.getModelsFromDbQuery(ReviewParticipantModel.ReviewParticipant, "reviewId", self.reviewId)
 
 

@@ -4,6 +4,7 @@ from typing import List, Dict
 import git
 from git import Repo, GitCommandError, Commit, NULL_TREE
 
+from models.UserModel import User
 from services.singleton import singleton
 
 
@@ -206,6 +207,27 @@ class RepositoryHelper:
                 return diff.diff.decode("utf-8")
 
         return ""
+
+    def fetch_commits_and_display(
+        self, user: User
+    ) -> list[tuple[str, str | bytes | None, int | None]] | None:
+        """
+        Fetches commits and prepares them for display.
+
+        Args:
+            user (str): user whose commits we should get
+
+        Returns:
+            List[tuple] | None: list of commit details for display or None if there are no reviews
+        """
+        commits = self.get_commits_by_user(user.username)
+
+        if len(commits) == 0:
+            return None
+
+        return [
+            (commit.hexsha, commit.message, commit.committed_date) for commit in commits
+        ]
 
 
 def validate_git_repository_url(url: str) -> None:
