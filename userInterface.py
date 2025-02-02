@@ -683,15 +683,7 @@ class AddCommentPopup(QDialog):
     def save_comment(self):
         comment_text = self.comment_input.toPlainText()
         if comment_text:
-            session = Session()
-            comment = CommentModel.Comment(
-                reviewID=self.review["reviewId"],
-                authorID=session.getUserID(),
-                content=comment_text
-            )
-            self.review["comments"].append(comment_text)
-
-            session.getReviewBuilder().addComment(session.getUserID(), comment)
+            self.review.addComments(Session().getUserID(), comment_text)
             QMessageBox.information(self, "Comment Saved", "Your comment has been saved.")
             self.close()
         else:
