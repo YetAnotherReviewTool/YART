@@ -25,14 +25,13 @@ class ReviewBuilder:
         self._review.authorId = user_id
 
     def add_commit(self, review_hex: str):
-        self._review.commitId.append(int(review_hex))
-        #  FIXME ?
+        self._review.commitId.append(int(review_hex, 16))   #  Looks good?
 
     def assign_reviewer(self, reviewerID:str, role: ParticipantRole = ParticipantRole.REVIEWER):
-        self._review.assignReviewer(int(reviewerID))
+        self._review.assignReviewer(int(reviewerID, 16))
 
     def build(self):
-        return
+        return self._review
         self.saveToDb()
 
     def saveToDb(self):

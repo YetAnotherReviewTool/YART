@@ -25,9 +25,12 @@ import sys
 
 from admin_backend import generate_report
 from config.settings import add_url
+from models.ReviewModel import Review
+from models.ReviewParticipantModel import ReviewParticipant, ParticipantStatus
 from services.git_service import RepositoryHelper
 from services.login_service import add_user
 from services.session_service import Session
+from models import CommentModel
 
 STYLE_SHEET = """
 QWidget {
@@ -184,9 +187,15 @@ class MainMenuFrame(QWidget):
         super().__init__()
         self.main_window = main_window
         self.reviews = [
-            {"title": "Review 1", "author": "User A"},
-            {"title": "Review 2", "author": "User B"},
+            Review(1, Session().getUserID(), "Review 1", "Description 1"),
+            Review(2, Session().getUserID(), "Review 2", "Description 2"),
+            Review(3, Session().getUserID() + 3, "Review 3", "Description 3")
+
         ]
+        # self.reviews = [
+        #     {"title": "Review 1", "author": "User A"},
+        #     {"title": "Review 2", "author": "User B"},
+        # ]
         self.setup_ui()
 
     def setup_ui(self):
@@ -242,7 +251,7 @@ class MainMenuFrame(QWidget):
                 widget.deleteLater()
 
         for review in self.reviews[:4]:
-            button = QPushButton(review["title"], self)
+            button = QPushButton(review.title, self)
             button.clicked.connect(lambda checked, r=review: self.open_review(r))
             self.reviews_layout.addWidget(button)
 
@@ -252,7 +261,7 @@ class MainMenuFrame(QWidget):
         self.refresh_reviews()
 
     def open_review(self, review):
-        if review["author"] == self.main_window.frames[0].username_input.text():
+        if review.authorId == Session().getUserID():
             self.main_window.frames[9].set_review(review)
             self.main_window.navigate_to_frame(9)
         else:
@@ -419,17 +428,17 @@ class AddNewReviewStep2Frame(QWidget):
         # reviewBuilder.add_commits()
         # reviewBuilder.add_reviewers()
         # reviewBuilder.add_title_and_desc(self.main_window.frames[2].title_input.text(), self.main_window.frames[2].description_input.text())
-        reviewBuilder.build()
+        review = reviewBuilder.build()
 
         # FIXME
-        review = {
-            "title": reviewBuilder._review.title,
-            "description": reviewBuilder._review.description,
-            "fileLink": reviewBuilder._review.fileLink,
-            "author": Session().user.username,
-            "commitId": reviewBuilder._review.commitId,
-            "reviewParticipants": reviewBuilder._review.reviewParticipants,
-        }
+        # review = {
+        #     "title": reviewBuilder._review.title,
+        #     "description": reviewBuilder._review.description,
+        #     "fileLink": reviewBuilder._review.fileLink,
+        #     "author": Session().user.username,
+        #     "commitId": reviewBuilder._review.commitId,
+        #     "reviewParticipants": reviewBuilder._review.reviewParticipants,
+        # }
         self.main_window.frames[1].reviews.append(review)
         QMessageBox.information(self, "Success", "Review added successfully!")
         self.main_window.navigate_to_frame(1)  # Navigate back to the main frame
@@ -616,15 +625,16 @@ class ReviewEvaluationFrame(QWidget):
     def set_review(self, review):
         self.review = review
         self.review_details.setText(
-            f"Title: {review['title']}\n"
-            f"Author: {review['author']}\n"
-            f"Description: {review['description']}\n"
-            f"File Link: {review['fileLink']}\n"
-            f"Commit ID: {', '.join(map(str, review['commitId']))}\n"
-            f"Review Participants: {', '.join(map(str, review['reviewParticipants']))}\n"
+            f"Title: {review.title}\n"
+            f"Author: {review.authorId}\n"
+            f"Description: {review.description}\n"
+            f"File Link: {review.fileLink}\n"
+            f"Commit ID: {', '.join(map(str, review.commitId))}\n"
+            f"Review Participants: {', '.join(map(str, review.reviewParticipants))}\n"
         )
     def open_add_comment_popup(self):
         dialog = AddCommentPopup(self.main_window)
+        self.main_window.frames[7].set_review(self.review)
         dialog.exec_()
 
     def open_verdict_popup(self):
@@ -638,6 +648,8 @@ class AddCommentPopup(QDialog):
 
     def __init__(self, main_window):
         super().__init__(main_window)
+        self.main_window = main_window
+        self.review = None
         self.setWindowTitle("Add Comment")
         self.setup_ui()
 
@@ -664,10 +676,22 @@ class AddCommentPopup(QDialog):
         layout.addStretch()
 
         self.setLayout(layout)
+        
+    def set_review(self, review):
+        self.review = review
 
     def save_comment(self):
-        comment = self.comment_input.toPlainText()
-        if comment.strip():
+        comment_text = self.comment_input.toPlainText()
+        if comment_text:
+            session = Session()
+            comment = CommentModel.Comment(
+                reviewID=self.review["reviewId"],
+                authorID=session.getUserID(),
+                content=comment_text
+            )
+            self.review["comments"].append(comment_text)
+
+            session.getReviewBuilder().addComment(session.getUserID(), comment)
             QMessageBox.information(self, "Comment Saved", "Your comment has been saved.")
             self.close()
         else:
@@ -726,6 +750,13 @@ class VerdictPopup(QDialog):
     def submit_verdict(self):
         verdict = self.verdict_combo.currentText()
         if verdict:
+            reviewParticipant: ReviewParticipant = getReviewParticipant(self.review.reviedId, Session().getUserID())
+
+            if self.verdict.lower() == "Accepted":
+                reviewParticipant.status = ParticipantStatus.ACCEPTED
+            else:
+                reviewParticipant.status = ParticipantStatus.REJECTED
+
             QMessageBox.information(self, "Verdict Submitted", f"The review has been {verdict.lower()}.")
             self.close()
         else:
@@ -780,12 +811,12 @@ class OwnReviewEditFrame(QWidget):
     def set_review(self, review):
         self.review = review
         self.review_details.setText(
-            f"Title: {review['title']}\n"
-            f"Author: {review['author']}\n"
-            f"Description: {review['description']}\n"
-            f"File Link: {review['fileLink']}\n"
-            f"Commit ID: {', '.join(map(str, review['commitId']))}\n"
-            f"Review Participants: {', '.join(map(str, review['reviewParticipants']))}\n"
+            f"Title: {review.title}\n"
+            f"Author: {review.authorId}\n"
+            f"Description: {review.description}\n"
+            f"File Link: {review.fileLink}\n"
+            f"Commit ID: {', '.join(map(str, review.commitId))}\n"
+            f"Review Participants: {', '.join(map(str, review.reviewParticipants))}\n"
         )
 
     def open_edit_review_popup(self):
@@ -795,6 +826,7 @@ class OwnReviewEditFrame(QWidget):
 
     def open_see_comments_popup(self):
         dialog = OwnReviewCommentsPopup(self.main_window)
+        dialog.set_review(self.review)
         dialog.exec_()
 
 
@@ -833,7 +865,7 @@ class OwnReviewCommentsPopup(QDialog):
 
 
 class OwnReviewAddCommentPopup(QDialog):
-    """Frame F11: Own Review Edit"""
+    """Frame F11: Edit Review"""
 
     def __init__(self, main_window):
         super().__init__(main_window)
@@ -848,28 +880,45 @@ class OwnReviewAddCommentPopup(QDialog):
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
 
-        self.title_label = QLabel("Edit Title:", self)
-        center_layout.addWidget(self.title_label)
+        form_widget = QWidget()
+        form_layout = QFormLayout(form_widget)
+
         self.title_input = QLineEdit(self)
-        center_layout.addWidget(self.title_input)
+        self.description_input = QLineEdit(self)
+        self.file_link_input = QLineEdit(self)
+        self.reviewer_input = QLineEdit(self)
+        self.commit_combo = QComboBox(self)
 
-        self.detail2_label = QLabel("Edit Detail 2:", self)
-        center_layout.addWidget(self.detail2_label)
-        self.detail2_input = QLineEdit(self)
-        center_layout.addWidget(self.detail2_input)
+        form_layout.addRow("Title:", self.title_input)
+        form_layout.addRow("Description:", self.description_input)
+        form_layout.addRow("File Link:", self.file_link_input)
+        form_layout.addRow("Assign Reviewer:", self.reviewer_input)
+        form_layout.addRow("Commit ID:", self.commit_combo)
 
-        self.detail3_label = QLabel("Edit Detail 3:", self)
-        center_layout.addWidget(self.detail3_label)
-        self.detail3_input = QLineEdit(self)
-        center_layout.addWidget(self.detail3_input)
+        self.populate_commit_combo()
+
+        self.add_reviewer_button = QPushButton("Add Reviewer", self)
+        self.add_reviewer_button.clicked.connect(self.add_reviewer)
+        form_layout.addWidget(self.add_reviewer_button)
+
+        self.add_commit_button = QPushButton("Add Commit", self)
+        self.add_commit_button.clicked.connect(self.add_commit)
+        form_layout.addWidget(self.add_commit_button)
 
         self.save_button = QPushButton("Save", self)
         self.save_button.clicked.connect(self.save_review)
-        center_layout.addWidget(self.save_button)
+        form_layout.addWidget(self.save_button)
 
         self.cancel_button = QPushButton("Cancel", self)
         self.cancel_button.clicked.connect(self.close)
-        center_layout.addWidget(self.cancel_button)
+        form_layout.addWidget(self.cancel_button)
+
+        form_hbox = QHBoxLayout()
+        form_hbox.addStretch()
+        form_hbox.addWidget(form_widget)
+        form_hbox.addStretch()
+
+        center_layout.addLayout(form_hbox)
 
         layout.addStretch()
         layout.addLayout(center_layout)
@@ -879,15 +928,43 @@ class OwnReviewAddCommentPopup(QDialog):
 
     def set_review(self, review):
         self.review = review
-        self.title_input.setText(review.get("title", ""))
-        self.detail2_input.setText(review.get("detail2", ""))
-        self.detail3_input.setText(review.get("detail3", ""))
+        self.title_input.setText(review.title)
+        self.description_input.setText(review.description)
+        self.file_link_input.setText(review.fileLink)
+
+    def populate_commit_combo(self):
+        session = Session()
+        commits = RepositoryHelper().fetch_commits_and_display(session.user)
+        if commits:
+            for commit in commits:
+                self.commit_combo.addItem(f"{commit[0]} - {commit[1]}")
+
+    def add_reviewer(self):
+        reviewer = self.reviewer_input.text().strip()
+        if reviewer:
+            self.review.assignReviewer(reviewer)
+            QMessageBox.information(self, "Reviewer Added", f"Reviewer '{reviewer}' added successfully.")
+            self.reviewer_input.clear()
+        else:
+            QMessageBox.warning(self, "Error", "Reviewer username cannot be empty.")
+
+    def add_commit(self):
+        commit_id = self.commit_combo.currentText().split(" - ")[0]
+        if commit_id:
+            self.review.add_commit(commit_id)
+            QMessageBox.information(self, "Commit Added", f"Commit '{commit_id}' added successfully.")
+        else:
+            QMessageBox.warning(self, "Error", "Commit ID cannot be empty.")
 
     def save_review(self):
         if self.review:
-            self.review["title"] = self.title_input.text().strip()
-            self.review["detail2"] = self.detail2_input.text().strip()
-            self.review["detail3"] = self.detail3_input.text().strip()
+            self.review.title = self.title_input.text().strip()
+            self.review.description = self.description_input.text().strip()
+            self.review.fileLink = self.file_link_input.text().strip()
+            # FIXME Update when database is implemented
+            #DatabaseHelper.updateDbRow(Review, self.review.reviewId, "title", self.review.title)
+            #DatabaseHelper.updateDbRow(Review, self.review.reviewId, "description", self.review.description)
+            #DatabaseHelper.updateDbRow(Review, self.review.reviewId, "fileLink", self.review.fileLink)
             QMessageBox.information(self, "Review Updated", "Your review has been updated.")
             self.close()
         else:
@@ -939,7 +1016,7 @@ class ViewAllReviewsFrame(QWidget):
                 widget.deleteLater()
 
         for review in self.main_window.frames[1].reviews:
-            button = QPushButton(f"{review['title']} (Author: {review['author']})", self)
+            button = QPushButton(f"{review.title} (Author: {review.authorId})", self)
             button.clicked.connect(lambda checked, r=review: self.open_review_details(r))
             self.reviews_layout.addWidget(button)
 
@@ -972,7 +1049,7 @@ class ViewReviewDetailsFrame(QWidget):
         self.review_details = QLabel("", self)
         center_layout.addWidget(self.review_details)
 
-        self.add_comment_button = QPushButton("Add Comment", self)
+        self.add_comment_button = QPushButton("Show Comments", self)
         self.add_comment_button.clicked.connect(self.navigate_to_add_comment)
         center_layout.addWidget(self.add_comment_button)
 
@@ -996,12 +1073,12 @@ class ViewReviewDetailsFrame(QWidget):
     def set_review(self, review):
         self.review = review
         self.review_details.setText(
-            f"Title: {review['title']}\n"
-            f"Author: {review['author']}\n"
-            f"Description: {review['description']}\n"
-            f"File Link: {review['fileLink']}\n"
-            f"Commit ID: {', '.join(map(str, review['commitId']))}\n"
-            f"Review Participants: {', '.join(map(str, review['reviewParticipants']))}\n"
+            f"Title: {review.title}\n"
+            f"Author: {review.authorId}\n"
+            f"Description: {review.description}\n"
+            f"File Link: {review.fileLink}\n"
+            f"Commit ID: {', '.join(map(str, review.commitId))}\n"
+            f"Review Participants: {', '.join(map(str, review.reviewParticipants))}\n"
         )
 
     def showEvent(self, event):
@@ -1030,21 +1107,17 @@ class AddReviewCommentFrame(QWidget):
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
 
-        self.comment_label = QLabel("Add a Comment:", self)
-        center_layout.addWidget(self.comment_label)
+        self.comments_label = QLabel("Comments for this Review:", self)
+        center_layout.addWidget(self.comments_label)
 
-        self.comment_input = QTextEdit(self)
-        self.comment_input.setPlaceholderText("Write your comment here...")
-        center_layout.addWidget(self.comment_input)
-
-        self.save_button = QPushButton("Save", self)
-        self.save_button.clicked.connect(self.save_comment)
-        center_layout.addWidget(self.save_button)
+        self.comments_display = QTextEdit(self)
+        self.comments_display.setReadOnly(True)
+        center_layout.addWidget(self.comments_display)
 
         self.back_button = QPushButton("Back", self)
         self.back_button.clicked.connect(lambda: self.main_window.navigate_to_frame(13))
         center_layout.addWidget(self.back_button)
-
+        
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -1053,17 +1126,12 @@ class AddReviewCommentFrame(QWidget):
 
     def set_review(self, review):
         self.review = review
+        self.display_comments()
 
-    def save_comment(self):
-        comment = self.comment_input.toPlainText().strip()
-        if not comment:
-            QMessageBox.warning(self, "Error", "Comment cannot be empty.")
-            return
-
-        QMessageBox.information(self, "Success", "Comment added successfully!")
-        self.comment_input.clear()
-        self.main_window.navigate_to_frame(13)
-
+    def display_comments(self):
+        comments = self.review.seeComments()
+        comments_text = "\n\n".join(comments)
+        self.comments_display.setText(comments_text)
 
 class MainWindow(QMainWindow):
     def __init__(self):
