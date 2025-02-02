@@ -5,6 +5,7 @@ import secrets
 import hashlib
 import base64
 
+SALT_LENGTH = 16
 
 class AccessError(PermissionError):
     """
@@ -18,7 +19,7 @@ class User:
     def __init__(self, 
                  userID: int, 
                  username: str, 
-                 passwordHash: str, 
+                 password_hash: str, 
                  salt: str = "",
                  admin: bool = False,
                  reviews: list[int] = []
@@ -26,23 +27,25 @@ class User:
         
         self.userID: int = userID
         self.username: str = username
-        self.passwordHash: str = passwordHash
+        self.password_hash: str = password_hash
         self.salt: str = salt
         self.admin: bool = admin
 
         self.reviews: list[int] = reviews
 
-    def new (self, username: str, password: str, admin: bool = False):
-        self.userID = DatabaseHelper.getNextId(User)
-        self.username = username
-        self.salt = secrets.token_urlsafe(16)
-        self.passwordHash = User.hash_password(self.salt, password)
-        self.admin = admin
-        self.reviews = []
+    def new (username: str, password_plain: str, admin: bool = False):
+        salt: str = User.makeSalt()
+        return User(
+            userID = DatabaseHelper.getNextId(User),
+            username = username,
+            salt = salt,
+            password_hash = User.hash_password(salt, password_plain),
+            admin = admin,
+            reviews = [],
+        )
+    
     def createReview(self, title: str, description: str):
 
-        from models.DatabaseModelHelper import DatabaseHelper
-        from models import ReviewModel
         id = DatabaseHelper.getNextId(ReviewModel.Review)
         newReview = ReviewModel.Review(id, title, description, self.userID)
         self.reviews.append(id)
@@ -54,19 +57,24 @@ class User:
 
     def change_password(self, old_password, new_password) -> bool:
         if User.verifyPassword(old_password):
-            newPasswordHash =  User.passwordHashFunction(new_password)
-            self.passwordHash = newPasswordHash
+            self.salt = User.makeSalt()
+            self.password_hash =  User.hash_password(self.salt, new_password)
 
-            from models.DatabaseModelHelper import DatabaseHelper
 
-            DatabaseHelper.updateDbRow(User, self.userID, "passwordHash", newPasswordHash)
+
+            DatabaseHelper.updateDbRow(User, self.userID, "salt", self.salt)
+            DatabaseHelper.updateDbRow(User, self.userID, "password_hash", self.password_hash)
             return True
         else:
             return False
         
 
+    def makeSalt():
+        return secrets.token_urlsafe(SALT_LENGTH)
+    
     def verifyPassword(self, passedPassword):
-        return secrets.compare_digest(self.passwordHash, self.hash_password(self.salt, passedPassword))
+        return secrets.compare_digest(self.password_hash, User.hash_password(self.salt, passedPassword))
+    
     def getReviews(self) -> list:
         return DatabaseHelper.getModelsFromDbQuery(ReviewModel.Review, "authorID", self.userID)
     
@@ -74,7 +82,7 @@ class User:
         return str(
             base64.urlsafe_b64encode(      
                 hashlib.sha256(
-                    salt + pass_unhashed.encode("utf-8")
+                    salt.encode("utf-8") + pass_unhashed.encode("utf-8")
                 ).digest()
             )
         )

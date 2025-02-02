@@ -1,3 +1,4 @@
+import logging
 import sqlite3
 from typing import Callable
 
@@ -71,15 +72,6 @@ CREATE TABLE IF NOT EXISTS comments (
 )""")	
 		return
 	
-
-
-
-	def __init__(self, db_path: str | None = None):
-		if db_path is None:
-			db_path = DEFAULT_DB_PATH
-		self.conn = sqlite3.connect(db_path)
-		self.cursor = self.conn.cursor()
-		self.cursor.execute("PRAGMA foreign_keys = ON")
 
 
 	### Some funny method but might be too hard to make it work
@@ -191,9 +183,13 @@ CREATE TABLE IF NOT EXISTS comments (
 		data = self.cursor.execute(f"SELECT reviewID FROM review_participants WHERE userID = {userID}").fetchall()
 		return [self.getReviewByID(reviewID) for reviewID in data]
 	
-	def insertUser(self, user: User):
-		self.cursor.execute(f"INSERT INTO users (userID, username, salt, password_hash, admin) VALUES ({user.userID}, '{user.username}', '{user.salt}', '{user.password_hash}', {user.admin})")
-		self.commit()
+	def insertUser(self, user: User) -> bool:
+		try:
+			self.cursor.execute(f"INSERT INTO users (userID, username, salt, password_hash, admin) VALUES ({user.userID}, '{user.username}', '{user.salt}', '{user.password_hash}', {user.admin})")
+			logging.error(f"Failed to insert User({user.username}, {user.password_hash}, {user.salt}, {user.admin})")
+			return True
+		finally:
+			return False
 
 
 
@@ -202,8 +198,6 @@ CREATE TABLE IF NOT EXISTS comments (
 	def commit(self):
 		self.conn.commit()
 	
-	def test(self):
-		a = self.getBy(Review)("reviewID", 1)
 	def rollback(self):
 		self.conn.rollback()
 	
