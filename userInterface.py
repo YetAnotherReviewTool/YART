@@ -28,6 +28,7 @@ from config.settings import add_url
 from services.git_service import RepositoryHelper
 from services.login_service import add_user
 from services.session_service import Session
+from models import CommentModel
 
 STYLE_SHEET = """
 QWidget {
@@ -625,6 +626,7 @@ class ReviewEvaluationFrame(QWidget):
         )
     def open_add_comment_popup(self):
         dialog = AddCommentPopup(self.main_window)
+        self.main_window.frames[7].set_review(self.review)
         dialog.exec_()
 
     def open_verdict_popup(self):
@@ -638,6 +640,8 @@ class AddCommentPopup(QDialog):
 
     def __init__(self, main_window):
         super().__init__(main_window)
+        self.main_window = main_window
+        self.review = None
         self.setWindowTitle("Add Comment")
         self.setup_ui()
 
@@ -664,10 +668,21 @@ class AddCommentPopup(QDialog):
         layout.addStretch()
 
         self.setLayout(layout)
+        
+    def set_review(self, review):
+        self.review = review
 
     def save_comment(self):
-        comment = self.comment_input.toPlainText()
-        if comment.strip():
+        comment_text = self.comment_input.toPlainText()
+        if comment_text:
+            session = Session()
+            comment = CommentModel.Comment(
+                reviewID=self.review["reviewId"],
+                authorID=session.getUserID(),
+                content=comment_text
+            )
+            self.review["comments"].append(comment_text)
+            session.getReviewBuilder()._review.addComments(session.getUserID(), comment)
             QMessageBox.information(self, "Comment Saved", "Your comment has been saved.")
             self.close()
         else:
@@ -1030,21 +1045,17 @@ class AddReviewCommentFrame(QWidget):
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
 
-        self.comment_label = QLabel("Add a Comment:", self)
-        center_layout.addWidget(self.comment_label)
+        self.comments_label = QLabel("Comments for this Review:", self)
+        center_layout.addWidget(self.comments_label)
 
-        self.comment_input = QTextEdit(self)
-        self.comment_input.setPlaceholderText("Write your comment here...")
-        center_layout.addWidget(self.comment_input)
-
-        self.save_button = QPushButton("Save", self)
-        self.save_button.clicked.connect(self.save_comment)
-        center_layout.addWidget(self.save_button)
+        self.comments_display = QTextEdit(self)
+        self.comments_display.setReadOnly(True)
+        center_layout.addWidget(self.comments_display)
 
         self.back_button = QPushButton("Back", self)
         self.back_button.clicked.connect(lambda: self.main_window.navigate_to_frame(13))
         center_layout.addWidget(self.back_button)
-
+        
         layout.addStretch()
         layout.addLayout(center_layout)
         layout.addStretch()
@@ -1053,17 +1064,12 @@ class AddReviewCommentFrame(QWidget):
 
     def set_review(self, review):
         self.review = review
+        self.display_comments()
 
-    def save_comment(self):
-        comment = self.comment_input.toPlainText().strip()
-        if not comment:
-            QMessageBox.warning(self, "Error", "Comment cannot be empty.")
-            return
-
-        QMessageBox.information(self, "Success", "Comment added successfully!")
-        self.comment_input.clear()
-        self.main_window.navigate_to_frame(13)
-
+    def display_comments(self):
+        comments = self.review.get("comments", [])
+        comments_text = "\n\n".join(comments)
+        self.comments_display.setText(comments_text)
 
 class MainWindow(QMainWindow):
     def __init__(self):
