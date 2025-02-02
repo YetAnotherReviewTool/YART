@@ -287,12 +287,12 @@ class AddNewReviewFrame(QWidget):
         form_widget = QWidget()
         form_layout = QFormLayout(form_widget)
         self.title_input = QLineEdit(self)
-        self.detail2_input = QLineEdit(self)
-        self.detail3_input = QLineEdit(self)
+        self.description_input = QLineEdit(self)
+        self.file_link_input = QLineEdit(self)
 
         form_layout.addRow("Title:", self.title_input)
-        form_layout.addRow("Description:", self.detail2_input)
-        # form_layout.addRow("Detail 3:", self.detail3_input)
+        form_layout.addRow("Description:", self.description_input)
+        form_layout.addRow("File Link:", self.file_link_input)
 
         self.next_button = QPushButton("Next", self)
         self.next_button.clicked.connect(self.validate_and_proceed)
@@ -312,12 +312,14 @@ class AddNewReviewFrame(QWidget):
         self.setLayout(layout)
 
     def validate_and_proceed(self):
-        if all([self.title_input.text(), self.detail2_input.text()]):
+        if all([self.title_input.text(), self.description_input.text(), self.file_link_input.text()]):
             session = Session()
             if session.getReviewBuilder() is None:
-                session.initReviewBuilder(self.title_input.text(), self.detail2_input.text())
+                session.initReviewBuilder(self.title_input.text(), self.description_input.text())
+                session.getReviewBuilder()._review.fileLink = self.file_link_input.text()
             else:
-                session.getReviewBuilder().set_title_and_desc(self.title_input.text(), self.detail2_input.text())
+                session.getReviewBuilder().add_title_and_desc(self.title_input.text(), self.description_input.text())
+                session.getReviewBuilder()._review.fileLink = self.file_link_input.text()
 
             self.main_window.navigate_to_frame(3)  # Navigate to Frame F3
         else:
@@ -369,7 +371,7 @@ class AddNewReviewStep2Frame(QWidget):
 
         self.confirm_button = QPushButton("Confirm", self)
         self.confirm_button.clicked.connect(self.confirm_review)
-        center_layout.addWidget(self.confirm_button)
+        form_layout.addWidget(self.confirm_button)
 
         form_hbox = QHBoxLayout()
         form_hbox.addStretch()
@@ -401,13 +403,13 @@ class AddNewReviewStep2Frame(QWidget):
             QMessageBox.warning(self, "Error", "Reviewer username cannot be empty.")
 
     def add_commit(self):
-        commit_id = self.commit_input.text().strip()
+        commit_id = self.commit_combo.currentText().split(" - ")[0]
         if commit_id:
             Session().getReviewBuilder().add_commit(commit_id)
             QMessageBox.information(self, "Commit Added", f"Commit '{commit_id}' added successfully.")
-            self.commit_input.clear()
         else:
-            QMessageBox.warning(self, "Error", "Commit cannot be empty.")
+            QMessageBox.warning(self, "Error", "Commit ID cannot be empty.")
+
 
     def confirm_review(self):
         reviewBuilder = Session().getReviewBuilder()
@@ -416,15 +418,17 @@ class AddNewReviewStep2Frame(QWidget):
         # TODO add commits and reviewers choice
         # reviewBuilder.add_commits()
         # reviewBuilder.add_reviewers()
-        reviewBuilder.add_author(Session().getUserID())
-        reviewBuilder.build()
+        # reviewBuilder.add_title_and_desc(self.main_window.frames[2].title_input.text(), self.main_window.frames[2].description_input.text())
+        reviewBuilder.saveToDb()
 
         # FIXME
         review = {
-            "title": self.main_window.frames[2].title_input.text(),
-            "detail2": self.main_window.frames[2].detail2_input.text(),
-            "detail3": self.main_window.frames[2].detail3_input.text(),
-            "author": self.main_window.frames[0].username_input.text(),
+            "title": reviewBuilder._review.title,
+            "description": reviewBuilder._review.description,
+            "fileLink": reviewBuilder._review.fileLink,
+            "author": Session().user.username,
+            "commitId": reviewBuilder._review.commitId,
+            "reviewParticipants": reviewBuilder._review.reviewParticipants,
         }
         self.main_window.frames[1].reviews.append(review)
         QMessageBox.information(self, "Success", "Review added successfully!")
@@ -604,8 +608,14 @@ class ReviewEvaluationFrame(QWidget):
 
     def set_review(self, review):
         self.review = review
-        self.review_details.setText(f"Title: {review['title']}\nAuthor: {review['author']}")
-
+        self.review_details.setText(
+            f"Title: {review['title']}\n"
+            f"Author: {review['author']}\n"
+            f"Description: {review['description']}\n"
+            f"File Link: {review['fileLink']}\n"
+            f"Commit ID: {', '.join(map(str, review['commitId']))}\n"
+            f"Review Participants: {', '.join(map(str, review['reviewParticipants']))}\n"
+        )
     def open_add_comment_popup(self):
         dialog = AddCommentPopup(self.main_window)
         dialog.exec_()
@@ -762,7 +772,14 @@ class OwnReviewEditFrame(QWidget):
 
     def set_review(self, review):
         self.review = review
-        self.review_details.setText(f"Title: {review['title']}\nAuthor: {review['author']}")
+        self.review_details.setText(
+            f"Title: {review['title']}\n"
+            f"Author: {review['author']}\n"
+            f"Description: {review['description']}\n"
+            f"File Link: {review['fileLink']}\n"
+            f"Commit ID: {', '.join(map(str, review['commitId']))}\n"
+            f"Review Participants: {', '.join(map(str, review['reviewParticipants']))}\n"
+        )
 
     def open_edit_review_popup(self):
         dialog = OwnReviewAddCommentPopup(self.main_window)
@@ -972,7 +989,12 @@ class ViewReviewDetailsFrame(QWidget):
     def set_review(self, review):
         self.review = review
         self.review_details.setText(
-            f"Title: {review['title']}\nAuthor: {review['author']}\nDetail 2: {review.get('detail2', '')}\nDetail 3: {review.get('detail3', '')}"
+            f"Title: {review['title']}\n"
+            f"Author: {review['author']}\n"
+            f"Description: {review['description']}\n"
+            f"File Link: {review['fileLink']}\n"
+            f"Commit ID: {', '.join(map(str, review['commitId']))}\n"
+            f"Review Participants: {', '.join(map(str, review['reviewParticipants']))}\n"
         )
 
     def showEvent(self, event):
