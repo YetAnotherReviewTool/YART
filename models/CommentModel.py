@@ -1,15 +1,8 @@
 import datetime
 
 class Comment:
-    def __init__(self):
-        self.reviewID: int
-        self.authorID: int
-        self.content: str
-        self.timestamp: datetime.date
-
-    def getFromDB(reviewID):
-        pass #TODO
-
-    def insertToDB(self):
-        pass #TODO
-        
+    def __init__(self, reviewID, authorID, content, timestamp=datetime.datetime.today()):
+        self.reviewID: int = reviewID
+        self.authorID: int = authorID
+        self.content: str = content
+        self.timestamp: datetime.date = timestamp

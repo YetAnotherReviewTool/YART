@@ -1,8 +1,8 @@
-import models.ReviewModel
+import ReviewModel
+from UserModel import User
 import datetime
-
-import admin_backend
-from models import ReviewModel
+import ReviewModel
+from DatabaseModelHelper import DatabaseHelper
 
 
 class AccessError(PermissionError):
@@ -14,23 +14,31 @@ class AccessError(PermissionError):
     pass
 
 class User:
-    #meow meow meow
-    def __init__(self):
-        self.userID: int
-        self.username: str
-        self.passwordHash: str
-        self.admin: bool
+    def __init__(self, 
+                 userID: int, 
+                 username: str, 
+                 passwordHash: str, 
+                 admin: bool,
+                 reviews: list[int]
+                 ):
+        
+        self.userID: int = userID
+        self.username: str = username
+        self.passwordHash: str = passwordHash
+        self.admin: bool = admin
+        self.reviews: list[int] = reviews
 
-        self.reviews: list[int]
+    def createReview(self, title: str, description: str):
+        reviewId = 0  #somehow figure out new id from database
 
-    def createReview(self, title: str, description: str, reviewID: int):
-        newReview = ReviewModel.review(title, description)
+        newReview = ReviewModel.Review(reviewId, title, description, self.userID)
+        self.reviews.append(reviewId)
 
-        #add new review to DB #TODO
+        DatabaseHelper.updateDbRow(User, self.userID, "reviews", self.reviews)
 
-        self.reviews.append(reviewID)
+        DatabaseHelper.insertIntoDbFromModel(ReviewModel.Review, newReview)
+        
 
-    
     def openReview(reviewID: int):
         pass
 
@@ -42,12 +50,9 @@ class User:
 
     def settings(self):
         pass
-        
-    def getFromDB(userID):
-        pass #TODO
 
-    def insertToDB(self):
-        pass #TODO
+    def getReviews(self) -> list[ReviewModel.Review]:
+        return DatabaseHelper.getModelsFromDbQuery(ReviewModel.Review, "authorID", self.userID)
         
 
 
