@@ -86,26 +86,26 @@ CREATE TABLE IF NOT EXISTS comments (
 	# basically Database.get(Comment).by("reviewID", 1)
 	# and Database.get(User).by("username", "Mateusz")
 
-
-	def getBy(self, model_class: type) -> Callable[[str], object]:
-		def by(field: str, value,  **params):
+	
+	def getBy(self, model_class: type) -> Callable[..., list]:
+		def conditions(field: str, value,  **params) -> list:
 			table_name = f"{self.model.__name__.lower()}s"
 			condition = f"{field} = ?"
-			placeholders = [value]
+			wildcards = [value]
 			
 			# Handle potential multiple conditions
 			if params:
 				additional_conditions = [f"{key} = ?" for key, val in params.items()]
 				condition = f"{condition} AND {' AND '.join(additional_conditions)}"
-				placeholders.extend([val for val in params.values()])
+				wildcards.extend([val for val in params.values()])
 			
 			query = f"SELECT * FROM {table_name} WHERE {condition}"
 			
-			self.cursor.execute(query, placeholders)
+			self.cursor.execute(query, wildcards)
 			results = self.cursor.fetchall()
 			
 			if results:
-				outputs = []
+				outputs: list = []
 				if model_class is User:
 					for result in results:
 						join1 = [review[0] for review in self.cursor.execute(f"SELECT reviewID FROM review_participants WHERE userID = {result[0]}").fetchall()]
@@ -128,7 +128,7 @@ CREATE TABLE IF NOT EXISTS comments (
 			else:
 				return None
 		
-		return by
+		return conditions
 	
 	
 		
