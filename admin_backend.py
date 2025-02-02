@@ -4,21 +4,16 @@ from typing import List
 
 from models.ReviewModel import Review, ReviewStatus
 from models.UserModel import User, AccessError
+from models.DatabaseModelHelper import DatabaseHelper
 
 FILENAME = "review_statistics.csv"
-
-
-def get_reviews() -> List[Review]:
-    raise NotImplementedError("RIP")
-    pass
-
 
 def generate_report(userID):
     """
         Generate a report for all reviews and export to a CSV file.
     """
 
-    reviews = get_reviews()
+    reviews = DatabaseHelper.getModelsFromDb(Review)
     total_reviews = len(reviews)
     approved_reviews = sum(1 for review in reviews if review.status == ReviewStatus.APPROVED)
     in_review_reviews = sum(1 for review in reviews if review.status == ReviewStatus.IN_REVIEW)
@@ -54,7 +49,5 @@ def generate_report(userID):
 
 
 def add_user(username: str, password: str):
-    new_user = User()
-
-    new_user.username = username
-    new_user.passwordHash = password
+    new_user = User(DatabaseHelper.getNextId(User), username, password)
+    DatabaseHelper.insertIntoDbFromModel(User, new_user)

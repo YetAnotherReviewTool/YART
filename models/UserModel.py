@@ -18,8 +18,8 @@ class User:
                  userID: int, 
                  username: str, 
                  passwordHash: str, 
-                 admin: bool,
-                 reviews: list[int]
+                 admin: bool = False,
+                 reviews: list[int] = []
                  ):
         
         self.userID: int = userID
@@ -29,30 +29,34 @@ class User:
         self.reviews: list[int] = reviews
 
     def createReview(self, title: str, description: str):
-        reviewId = 0  #somehow figure out new id from database
 
-        newReview = ReviewModel.Review(reviewId, title, description, self.userID)
-        self.reviews.append(reviewId)
-
+        id = DatabaseHelper.getNextId(ReviewModel.Review)
+        newReview = ReviewModel.Review(id, title, description, self.userID)
+        self.reviews.append(id)
         DatabaseHelper.updateDbRow(User, self.userID, "reviews", self.reviews)
 
         DatabaseHelper.insertIntoDbFromModel(ReviewModel.Review, newReview)
+
+
+    def change_password(self, old_password, new_password) -> bool:
+        if User.verifyPassword(old_password):
+            newPasswordHash =  User.passwordHashFunction(new_password)
+            self.passwordHash = newPasswordHash
+            DatabaseHelper.updateDbRow(User, self.userID, "passwordHash", newPasswordHash)
+            return True
+        else:
+            return False
         
 
-    def openReview(reviewID: int):
-        pass
-
-        #whatever this is supposed to do? TODO
-
-    def change_password(self, old_password, new_password):
-        #is_correct_password()
-        pass
-
-    def settings(self):
-        pass
+    def verifyPassword(self, passedPassword):
+        return User.passwordHashFunction(passedPassword) == self.passwordHash
 
     def getReviews(self) -> list[ReviewModel.Review]:
         return DatabaseHelper.getModelsFromDbQuery(ReviewModel.Review, "authorID", self.userID)
+    
+    def passwordHashFunction(plainText: str) -> str:
+        # Maybe put something fancier here? maybe TODO
+        return plainText
         
 
 
