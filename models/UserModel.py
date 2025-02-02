@@ -15,6 +15,7 @@ class User:
                  userID: int, 
                  username: str, 
                  passwordHash: str, 
+                 salt: str = "",
                  admin: bool = False,
                  reviews: list[int] = []
                  ):
@@ -22,7 +23,9 @@ class User:
         self.userID: int = userID
         self.username: str = username
         self.passwordHash: str = passwordHash
+        self.salt: str = salt
         self.admin: bool = admin
+
         self.reviews: list[int] = reviews
 
     def createReview(self, title: str, description: str):
