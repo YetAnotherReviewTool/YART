@@ -21,7 +21,8 @@ class Review:
                 commitId = list(),
                 fileLink = "",
                 creationDate = datetime.datetime.today(),
-                reviewParticipants: list[int] = []
+                reviewParticipants: list[int] = [],
+                comments: list[int] = []
                 ):
         
         self.reviewId: int = reviewId
@@ -33,6 +34,7 @@ class Review:
         self.creationDate: datetime.datetime = creationDate
         self.authorId: int = authorId
         self.reviewParticipants: list[int] = reviewParticipants
+        self.comments: list [int] = comments
 
     def assignReviewer(self, userID: int,
                        role: ReviewParticipantModel.ParticipantRole = ReviewParticipantModel.ParticipantRole.REVIEWER) -> None:
@@ -46,38 +48,23 @@ class Review:
             []
         )
 
-        from models.DatabaseModelHelper import DatabaseHelper
-
         DatabaseHelper.insertIntoDbFromModel(ReviewParticipantModel.ReviewParticipant, newParticipant)
 
         self.reviewParticipants.append(userID)
         DatabaseHelper.updateDbRow(Review, self.reviewId, "reviewParticipants", self.reviewParticipants)
 
     def seeComments(self) -> list:
-        allComments = []
-
-
-        for participant in self.reviewParticipants:
-            for comment in participant.getComments():
-                allComments.append(comment)
-
-        return allComments
+        return DatabaseHelper.getModelsFromDbQuery(CommentModel.Comment, "reviewID", self.reviewId)
     
     def addComments(self, userID: int, comment):
         if userID not in self.reviewParticipants:
             from models import UserModel
             raise UserModel.AccessError
 
-        from models.DatabaseModelHelper import DatabaseHelper
-        from models import CommentModel
-
         DatabaseHelper.insertIntoDbFromModel(CommentModel.Comment, comment)
+        self.comments.append(comment.commentId)
 
-        #are we sure sure sure we want this here and not in ReviewParticipant??
-        #cause i gotta do this weird thing now to update the comment id list in DB
-
-        participantComments = DatabaseHelper.getModelsFromDbQuery(ReviewParticipantModel, "userId", userID).comments
-        DatabaseHelper.updateDbRow(ReviewParticipantModel.ReviewParticipant, userID, "comments", participantComments.append(comment.authorID))
+        DatabaseHelper.updateDbRow(Review, self.reviewId, "comments", self.comments)
 
     def evaluateReview(self) -> bool:
         """

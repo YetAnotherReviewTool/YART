@@ -17,18 +17,9 @@ class ReviewParticipant:
                  reviewID: int,
                  role: ParticipantRole,
                  isAccepted: ParticipantStatus,
-                 comments: list[int] = []):
+                 ):
         
         self.userID: int = userID
         self.reviewID: int = reviewID
         self.role: ParticipantRole = role
         self.status: ParticipantStatus = isAccepted
-
-
-        self.comments: list[int] = comments
-
-
-    def getComments(self):
-        from models.DatabaseModelHelper import DatabaseHelper
-        from models import CommentModel
-        return DatabaseHelper.getModelsFromDbQuery(CommentModel.Comment, "authorID", self.userID)

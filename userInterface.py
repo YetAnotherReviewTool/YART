@@ -189,7 +189,7 @@ class MainMenuFrame(QWidget):
         self.reviews = [
             Review(1, Session().getUserID(), "Review 1", "Description 1"),
             Review(2, Session().getUserID(), "Review 2", "Description 2"),
-            Review(3, Session().getUserID() + 3, "Review 3", "Description 3", reviewParticipants=[Session().getUserID()])
+            Review(3, Session().getUserID() + 3, "Review 3", "Description 3")
 
         ]
         # self.reviews = [
@@ -622,7 +622,7 @@ class ReviewEvaluationFrame(QWidget):
 
         self.setLayout(layout)
 
-    def set_review(self, review: Review):
+    def set_review(self, review):
         self.review = review
         self.review_details.setText(
             f"Title: {review.title}\n"
@@ -677,19 +677,21 @@ class AddCommentPopup(QDialog):
 
         self.setLayout(layout)
         
-    def set_review(self, review: Review):
+    def set_review(self, review):
         self.review = review
 
     def save_comment(self):
         comment_text = self.comment_input.toPlainText()
         if comment_text:
             session = Session()
-            # comment = CommentModel.Comment(
-            #     reviewID=self.review.reviewId,
-            #     authorID=session.getUserID(),
-            #     content=comment_text
-            # )
-            self.review.addComments(session.getUserID(), comment_text)
+            comment = CommentModel.Comment(
+                reviewID=self.review["reviewId"],
+                authorID=session.getUserID(),
+                content=comment_text
+            )
+            self.review["comments"].append(comment_text)
+
+            session.getReviewBuilder().addComment(session.getUserID(), comment)
             QMessageBox.information(self, "Comment Saved", "Your comment has been saved.")
             self.close()
         else:
@@ -740,10 +742,10 @@ class VerdictPopup(QDialog):
 
         self.setLayout(layout)
 
-    def set_review(self, review: Review):
+    def set_review(self, review):
         self.review = review
-        comments = review.seeComments()
-        self.comments_display.setText("\n".join([str(comment) for comment in comments]))
+        comments = review.get("comments", [])
+        self.comments_display.setText("\n".join(comments))
 
     def submit_verdict(self):
         verdict = self.verdict_combo.currentText()
@@ -809,12 +811,12 @@ class OwnReviewEditFrame(QWidget):
     def set_review(self, review):
         self.review = review
         self.review_details.setText(
-            f"Title: {review['title']}\n"
-            f"Author: {review['author']}\n"
-            f"Description: {review['description']}\n"
-            f"File Link: {review['fileLink']}\n"
-            f"Commit ID: {', '.join(map(str, review['commitId']))}\n"
-            f"Review Participants: {', '.join(map(str, review['reviewParticipants']))}\n"
+            f"Title: {review.title}\n"
+            f"Author: {review.authorId}\n"
+            f"Description: {review.description}\n"
+            f"File Link: {review.fileLink}\n"
+            f"Commit ID: {', '.join(map(str, review.commitId))}\n"
+            f"Review Participants: {', '.join(map(str, review.reviewParticipants))}\n"
         )
 
     def open_edit_review_popup(self):
@@ -824,6 +826,7 @@ class OwnReviewEditFrame(QWidget):
 
     def open_see_comments_popup(self):
         dialog = OwnReviewCommentsPopup(self.main_window)
+        dialog.set_review(self.review)
         dialog.exec_()
 
 
@@ -1046,7 +1049,7 @@ class ViewReviewDetailsFrame(QWidget):
         self.review_details = QLabel("", self)
         center_layout.addWidget(self.review_details)
 
-        self.add_comment_button = QPushButton("Add Comment", self)
+        self.add_comment_button = QPushButton("Show Comments", self)
         self.add_comment_button.clicked.connect(self.navigate_to_add_comment)
         center_layout.addWidget(self.add_comment_button)
 
@@ -1070,12 +1073,12 @@ class ViewReviewDetailsFrame(QWidget):
     def set_review(self, review):
         self.review = review
         self.review_details.setText(
-            f"Title: {review['title']}\n"
-            f"Author: {review['author']}\n"
-            f"Description: {review['description']}\n"
-            f"File Link: {review['fileLink']}\n"
-            f"Commit ID: {', '.join(map(str, review['commitId']))}\n"
-            f"Review Participants: {', '.join(map(str, review['reviewParticipants']))}\n"
+            f"Title: {review.title}\n"
+            f"Author: {review.authorId}\n"
+            f"Description: {review.description}\n"
+            f"File Link: {review.fileLink}\n"
+            f"Commit ID: {', '.join(map(str, review.commitId))}\n"
+            f"Review Participants: {', '.join(map(str, review.reviewParticipants))}\n"
         )
 
     def showEvent(self, event):
