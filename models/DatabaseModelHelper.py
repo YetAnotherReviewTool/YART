@@ -1,7 +1,4 @@
-import CommentModel
-import ReviewModel
-import ReviewParticipantModel
-import UserModel
+
 
 class DatabaseHelper:
     """
@@ -9,6 +6,7 @@ class DatabaseHelper:
     """
 
     def modelToDbName(model) -> str:
+        from models import ReviewModel, CommentModel, ReviewParticipantModel, UserModel
         match model:
             case CommentModel.Comment:
                 return "Comment"
@@ -42,6 +40,7 @@ class DatabaseHelper:
         """
         # czekam na endpointy ale zakldam teraz ze to bedzie dict jsonwy gdzie klucze to kolumny #TODO
 
+        from models import ReviewModel
         rows = list(DatabaseHelper.getRowsFromDb(DatabaseHelper.modelToDbName(model)).values())
         return [ReviewModel.Review(*entry.values()) for entry in rows]
     
@@ -53,7 +52,7 @@ class DatabaseHelper:
         """
 
         # czekam na endpointy ale zakldam teraz ze to bedzie dict jsonwy gdzie klucze to kolumny
-
+        from models import ReviewModel
         rows = list(DatabaseHelper.getRowsFromDb(DatabaseHelper.modelToDbName(model), parameter, parameterValue).values()) #query the DB
         return [ReviewModel.Review(*entry.values()) for entry in rows]
 

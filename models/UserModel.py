@@ -1,10 +1,3 @@
-import ReviewModel
-from UserModel import User
-import datetime
-import ReviewModel
-from DatabaseModelHelper import DatabaseHelper
-
-
 class AccessError(PermissionError):
     """
     Custom exception for handling inufficient permissions.
@@ -30,9 +23,12 @@ class User:
 
     def createReview(self, title: str, description: str):
 
+        from models.DatabaseModelHelper import DatabaseHelper
+        from models import ReviewModel
         id = DatabaseHelper.getNextId(ReviewModel.Review)
         newReview = ReviewModel.Review(id, title, description, self.userID)
         self.reviews.append(id)
+
         DatabaseHelper.updateDbRow(User, self.userID, "reviews", self.reviews)
 
         DatabaseHelper.insertIntoDbFromModel(ReviewModel.Review, newReview)
@@ -42,6 +38,9 @@ class User:
         if User.verifyPassword(old_password):
             newPasswordHash =  User.passwordHashFunction(new_password)
             self.passwordHash = newPasswordHash
+
+            from models.DatabaseModelHelper import DatabaseHelper
+
             DatabaseHelper.updateDbRow(User, self.userID, "passwordHash", newPasswordHash)
             return True
         else:
@@ -51,7 +50,9 @@ class User:
     def verifyPassword(self, passedPassword):
         return User.passwordHashFunction(passedPassword) == self.passwordHash
 
-    def getReviews(self) -> list[ReviewModel.Review]:
+    def getReviews(self) -> list:
+        from models import ReviewModel
+        from models.DatabaseModelHelper import DatabaseHelper
         return DatabaseHelper.getModelsFromDbQuery(ReviewModel.Review, "authorID", self.userID)
     
     def passwordHashFunction(plainText: str) -> str:
