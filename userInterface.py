@@ -25,6 +25,7 @@ import sys
 
 from admin_backend import generate_report
 from config.settings import add_url
+from models.ReviewModel import Review
 from services.git_service import RepositoryHelper
 from services.login_service import add_user
 from services.session_service import Session
@@ -185,9 +186,15 @@ class MainMenuFrame(QWidget):
         super().__init__()
         self.main_window = main_window
         self.reviews = [
-            {"title": "Review 1", "author": "User A"},
-            {"title": "Review 2", "author": "User B"},
+            Review(1, Session().getUserID(), "Review 1", "Description 1"),
+            Review(2, Session().getUserID(), "Review 2", "Description 2"),
+            Review(3, Session().getUserID() + 3, "Review 3", "Description 3")
+
         ]
+        # self.reviews = [
+        #     {"title": "Review 1", "author": "User A"},
+        #     {"title": "Review 2", "author": "User B"},
+        # ]
         self.setup_ui()
 
     def setup_ui(self):
@@ -243,7 +250,7 @@ class MainMenuFrame(QWidget):
                 widget.deleteLater()
 
         for review in self.reviews[:4]:
-            button = QPushButton(review["title"], self)
+            button = QPushButton(review.title, self)
             button.clicked.connect(lambda checked, r=review: self.open_review(r))
             self.reviews_layout.addWidget(button)
 
@@ -253,7 +260,7 @@ class MainMenuFrame(QWidget):
         self.refresh_reviews()
 
     def open_review(self, review):
-        if review["author"] == self.main_window.frames[0].username_input.text():
+        if review.authorId == Session().getUserID():
             self.main_window.frames[9].set_review(review)
             self.main_window.navigate_to_frame(9)
         else:
@@ -682,7 +689,8 @@ class AddCommentPopup(QDialog):
                 content=comment_text
             )
             self.review["comments"].append(comment_text)
-            session.getReviewBuilder()._review.addComments(session.getUserID(), comment)
+
+            session.getReviewBuilder().addComment(session.getUserID(), comment)
             QMessageBox.information(self, "Comment Saved", "Your comment has been saved.")
             self.close()
         else:
