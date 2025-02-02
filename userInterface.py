@@ -1008,7 +1008,7 @@ class ViewAllReviewsFrame(QWidget):
                 widget.deleteLater()
 
         for review in self.main_window.frames[1].reviews:
-            button = QPushButton(f"{review['title']} (Author: {review['author']})", self)
+            button = QPushButton(f"{review.title} (Author: {review.authorId})", self)
             button.clicked.connect(lambda checked, r=review: self.open_review_details(r))
             self.reviews_layout.addWidget(button)
 
@@ -1121,7 +1121,7 @@ class AddReviewCommentFrame(QWidget):
         self.display_comments()
 
     def display_comments(self):
-        comments = self.review.get("comments", [])
+        comments = self.review.seeComments()
         comments_text = "\n\n".join(comments)
         self.comments_display.setText(comments_text)
 
