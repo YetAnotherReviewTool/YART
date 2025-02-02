@@ -1,6 +1,8 @@
 import sqlite3
 from typing import Callable
 
+from typing import List
+
 from models.CommentModel import Comment
 from models.ReviewModel import Review
 from models.UserModel import User
@@ -127,6 +129,8 @@ CREATE TABLE IF NOT EXISTS comments (
 				return None
 		
 		return by
+	
+	
 		
 	def getUserByID(self, userID: int) -> User:
 		self.cursor.execute(f"SELECT userID, username, password_hash, admin FROM users WHERE userID = {userID}")
@@ -152,10 +156,46 @@ CREATE TABLE IF NOT EXISTS comments (
 							creation_date 
 							creatorID 
 					 	FROM reviews 
-					  	WHERE reviewID = {reviewID}""")
-		join1 = self.cursor.execute(f"SELECT")
-		review = Review(*self.cursor.fetchone(), commitId=[])
+					  	WHERE reviewID = {reviewID}""").fetchone()
+		join1 = [reviewer[0] for reviewer in self.cursor.execute(f"SELECT userID FROM review_participants WHERE reviewID = {reviewID}").fetchall()]
+		review = Review(reviewID=data[0], title=data[1], description=data[2], status=data[3], fileLink=data[4], creationDate=data[5], authorId=data[6], reviewParticipants=join1, commitId=[])
 		return review
+	
+	def getReviewByTitle(self, title: str) -> Review:
+		data = self.cursor.execute(f"""SELECT 
+							reviewID 
+							title 
+							description
+							status 
+							file_path 
+							creation_date 
+							creatorID 
+					 	FROM reviews 
+					  	WHERE title = '{title}'""").fetchone()
+		join1 = [reviewer[0] for reviewer in self.cursor.execute(f"SELECT userID FROM review_participants WHERE reviewID = {data[0]}").fetchall()]
+		review = Review(reviewID=data[0], title=data[1], description=data[2], status=data[3], fileLink=data[4], creationDate=data[5], authorId=data[6], reviewParticipants=join1, commitId=[])
+		return review
+
+	def getCommentByID(self, reviewID: int) -> Comment:
+		data = self.cursor.execute(f"SELECT commentID, reviewID, authorID, content, timestamp FROM comments WHERE reviewID = {reviewID}").fetchone()
+		return Comment(commentID=data[0], reviewID=data[1], authorID=data[2], content=data[3], timestamp=data[4])
+
+	def getCommentsByReviewID(self, reviewID: int) -> List[Comment]:
+		data = self.cursor.execute(f"SELECT commentID, reviewID, authorID, content, timestamp FROM comments WHERE reviewID = {reviewID}").fetchall()
+		return [Comment(commentID=data[0], reviewID=data[1], authorID=data[2], content=data[3], timestamp=data[4]) for data in data]
+	def getReviewParticipants(self, reviewID: int) -> List[ReviewParticipant]:
+		data = self.cursor.execute(f"SELECT userID, role FROM review_participants WHERE reviewID = {reviewID}").fetchall()
+		return [ReviewParticipant(reviewID=reviewID, userID=userID, role=role) for userID, role in data]
+	
+	def getReviewsByUserID(self, userID: int) -> List[Review]:
+		data = self.cursor.execute(f"SELECT reviewID FROM review_participants WHERE userID = {userID}").fetchall()
+		return [self.getReviewByID(reviewID) for reviewID in data]
+	
+	def insertUser(self, user: User):
+		self.cursor.execute(f"INSERT INTO users (userID, username, salt, password_hash, admin) VALUES ({user.userID}, '{user.username}', '{user.salt}', '{user.password_hash}', {user.admin})")
+		self.commit()
+
+
 
 	
 	 
