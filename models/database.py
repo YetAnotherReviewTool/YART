@@ -4,7 +4,7 @@ from typing import Callable
 
 from typing import List
 
-DEFAULT_DB_PATH = "database.db"
+DEFAULT_DB_PATH = "../database.db"
 
 class Database:
 	def __init__(self, db_path: str | None = None):
@@ -241,9 +241,9 @@ CREATE TABLE IF NOT EXISTS comments (
 		""", ("Sample Title", "Sample Description", "Pending", "http://example.com", "2024-02-02", 1))
 		
 
-
-db = Database()
-db.create_tables()
-db.insertTestData()
-print(db.getRowsFromTable("reviews"))
+if __name__ == "__main__":
+	db = Database()
+	db.create_tables()
+	db.insertTestData()
+	print(db.getRowsFromTable("reviews"))
 

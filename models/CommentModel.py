@@ -2,8 +2,8 @@ import datetime
 from models.model import Model
 
 class Comment(Model):
-    def __init__(self, commentId, reviewID, authorID, content, timestamp=datetime.datetime.today()):
-        self.commentId: int = commentId
+    def __init__(self, commentID, reviewID, authorID, content, timestamp=datetime.datetime.today()):
+        self.commentID: int = commentID
         self.reviewID: int = reviewID
         self.authorID: int = authorID
         self.content: str = content

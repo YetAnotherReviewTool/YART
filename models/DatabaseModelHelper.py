@@ -1,8 +1,13 @@
+import os
+
 from models.database_new import Database as DB
 from models.model import Model
 
+
 class DatabaseHelper:
-    DBInstance = DB("database.db")
+    DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "database.db")
+    DBInstance = DB(DB_PATH)
+
     """
     Class with generic methods to handle creating Models from DB and inserting into the DB based on the existing models
     """
@@ -14,25 +19,27 @@ class DatabaseHelper:
         return DatabaseHelper.DBInstance.getRowsFromTable(DatabaseHelper.modelToDbName(model))
 
     def getRowsFromDbQuery(model: type, parameter: str, parameterValue: object) -> dict:
-        return DatabaseHelper.DBInstance.getRowsFromTableQuery(DatabaseHelper.modelToDbName(model), parameter, parameterValue)
+        return DatabaseHelper.DBInstance.getRowsFromTableQuery(DatabaseHelper.modelToDbName(model), parameter,
+                                                               parameterValue)
 
     def getRowsFromDbQueries(model: type, parameters: list[str], parameterValues: list[object]) -> dict:
-        return DatabaseHelper.DBInstance.getRowsFromTableQueries(DatabaseHelper.modelToDbName(model),parameters, parameterValues)
+        return DatabaseHelper.DBInstance.getRowsFromTableQueries(DatabaseHelper.modelToDbName(model), parameters,
+                                                                 parameterValues)
 
     def getRowFromDbByPrimaryKey(model: type, primaryKey: int):
         """
         Returns a single, unique row based on primary key.
         """
         return DatabaseHelper.getRowsFromDbQuery(model, DatabaseHelper.getPrimaryKeyColumnName(model), primaryKey)
-    
+
     def getRowFromDbByCompositeKey(model: type, primaryKeyVals: list[int]):
         """
         Returns a single, unique row based on primary key.
         Designed for compound key input to handle ReviewParticipant
         """
 
-        return DatabaseHelper.getRowsFromDbQueries(model, DatabaseHelper.getCompositePrimaryKeyColumnNames(model), primaryKeyVals)
-
+        return DatabaseHelper.getRowsFromDbQueries(model, DatabaseHelper.getCompositePrimaryKeyColumnNames(model),
+                                                   primaryKeyVals)
 
     def getModelsFromDb(model: type) -> list:
         """
@@ -41,7 +48,7 @@ class DatabaseHelper:
         # czekam na endpointy ale zakldam teraz ze to bedzie dict jsonwy gdzie klucze to kolumny #TODO
         rows = DatabaseHelper.getRowsFromDb(model)
         return model.constructFromDbData(rows)
-    
+
     def getModelsFromDbQuery(model: Model, parameter: str, parameterValue: object) -> list:
         """
         Returns queried reviews from the database. Basically returns:
@@ -51,7 +58,7 @@ class DatabaseHelper:
 
         rows = DatabaseHelper.getRowsFromDbQuery(model, parameter, parameterValue)
         return model.constructFromDbData(rows)
-    
+
     def getModelsFromDbQueries(model: Model, parameters: list[str], parameterValues: list[object]) -> list:
         """
         Returns queried reviews from the database. Basically returns:
@@ -62,7 +69,6 @@ class DatabaseHelper:
         rows = DatabaseHelper.getRowsFromDbQueries(model, parameters, parameterValues)
         return model.constructFromDbData(rows)
 
-    
     def insertIntoDbFromModel(model: type, instance: Model) -> None:
         """
         Inserts a new row into the database for a given model.
@@ -82,14 +88,7 @@ class DatabaseHelper:
 
     def getCompositePrimaryKeyColumnNames(model: type) -> list[str]:
         return DatabaseHelper.getCompositePrimaryKeyColumnNames(model)
-    
 
     def getValuesFromDb(model: Model, type: str, parameter: str, parameterValue: str) -> list:
-        return DatabaseHelper.DBInstance.getValuesFromTable(DatabaseHelper.modelToDbName(model), type, parameter, parameterValue)
-
-
-
-
-
-
-    
+        return DatabaseHelper.DBInstance.getValuesFromTable(DatabaseHelper.modelToDbName(model), type, parameter,
+                                                            parameterValue)

@@ -33,7 +33,8 @@ class Review(Model):
         self.creationDate: datetime.datetime = creationDate
         self.authorId: int = authorId
         self.reviewParticipantsUserIDs: list[int] = DatabaseHelper.getValuesFromDb(ReviewParticipantModel.ReviewParticipant, "userID", "reviewID", self.reviewId)
-        self.comments: list [int] = DatabaseHelper.getValuesFromDb(ReviewParticipantModel.ReviewParticipant, "commentId", "reviewID", self.reviewId)
+        self.comments: list [int] = DatabaseHelper.getValuesFromDb(CommentModel.Comment,
+                                                                   "commentID", "reviewID", self.reviewId)
 
     def assignReviewer(self, userID: int,
                        role: ReviewParticipantModel.ParticipantRole = ReviewParticipantModel.ParticipantRole.REVIEWER) -> None:

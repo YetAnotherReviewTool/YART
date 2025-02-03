@@ -1,6 +1,8 @@
+import os
 import sqlite3
 
-DEFAULT_DB_PATH = "database.db"
+
+DEFAULT_DB_PATH = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "database.db")
 
 class Database:
 	def __init__(self, db_path: str | None = None):
@@ -197,3 +199,9 @@ CREATE TABLE IF NOT EXISTS comments (
 	def __del__(self):
 
 		self.conn.close()
+
+if __name__ == "__main__":
+	db = Database()
+	db.create_tables()
+	db.cursor.execute("SELECT * FROM sqlite_schema")
+	print(db.cursor.fetchall())
