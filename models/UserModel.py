@@ -1,5 +1,6 @@
 import models.ReviewModel as ReviewModel
 from models.DatabaseModelHelper import DatabaseHelper
+from models.ReviewParticipantModel import ReviewParticipant
 from models.model import Model
 
 import secrets
@@ -23,7 +24,6 @@ class User(Model):
                  password_hash: str, 
                  salt: str = "",
                  admin: bool = False,
-                 reviews: list[int] = []
                  ):
         
         self.userID: int = userID
@@ -32,7 +32,7 @@ class User(Model):
         self.salt: str = salt
         self.admin: bool = admin
 
-        self.reviews: list[int] = reviews
+        self.reviews: list[int] = DatabaseHelper.getValuesFromDb(ReviewParticipant, "reviewID", "userID", self.userID)
 
     def new (username: str, password_plain: str, admin: bool = False):
         salt: str = User.makeSalt()
@@ -50,8 +50,6 @@ class User(Model):
         id = DatabaseHelper.getNextId(ReviewModel.Review)
         newReview = ReviewModel.Review(id, title, description, self.userID)
         self.reviews.append(id)
-
-        DatabaseHelper.updateDbRow(User, self.userID, "reviews", self.reviews)
 
         DatabaseHelper.insertIntoDbFromModel(ReviewModel.Review, newReview)
 

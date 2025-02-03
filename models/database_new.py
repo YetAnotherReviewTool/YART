@@ -116,6 +116,16 @@ CREATE TABLE IF NOT EXISTS comments (
 		rows = cursor.fetchall()
 		
 		return [dict(row) for row in rows]
+	
+	def getValuesFromTable(self, tableName: str, column: str, parameter: str, parameterValue: str):
+		cursor = self.conn.cursor()
+
+		query = f"SELECT {column} FROM {Database.TABLE_NAME_MAP[tableName]} WHERE {parameter} = ?"
+		cursor.execute(query, (parameterValue,))
+		results = cursor.fetchall()
+
+		return [row[0] for row in results]
+
 
 
 	def getPrimaryKeyColumnName(self, model: type) -> str:
