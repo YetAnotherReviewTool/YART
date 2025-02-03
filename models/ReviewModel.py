@@ -55,6 +55,7 @@ class Review(BaseModel, Model):
         self.reviewParticipants = reviewParticipants
         self.comments = comments
 
+
     def assignReviewer(self, userID: int,
                        role: ReviewParticipantModel.ParticipantRole = ReviewParticipantModel.ParticipantRole.REVIEWER) -> None:
         """
