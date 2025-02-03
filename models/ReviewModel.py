@@ -43,20 +43,20 @@ class Review(Model):
         """
         newParticipant = ReviewParticipantModel.ReviewParticipant(
             userID,
-            role,
-            ReviewParticipantModel.ParticipantStatus.IN_PROGRESS,
-            []
+            self.reviewId,
+            ReviewParticipantModel.ParticipantRole.REVIEWER,
+            ReviewParticipantModel.ParticipantStatus.IN_PROGRESS
         )
 
         DatabaseHelper.insertIntoDbFromModel(ReviewParticipantModel.ReviewParticipant, newParticipant)
-        self.reviewParticipants.append(userID)
+        self.reviewParticipantsUserIDs.append(userID)
 
 
     def seeComments(self) -> list:
         return DatabaseHelper.getModelsFromDbQuery(CommentModel.Comment, "reviewID", self.reviewId)
     
     def addComments(self, userID: int, comment):
-        if userID not in self.reviewParticipants:
+        if userID not in self.reviewParticipantsUserIDs:
             from models import UserModel
             raise UserModel.AccessError
 
@@ -70,7 +70,7 @@ class Review(Model):
         since I think sometime ago we agreed that a review is accepted
         when all ReviewParticipants accept it? so thats what imma do here
         """
-        for reviewerID in self.reviewParticipants:
+        for reviewerID in self.reviewParticipantsUserIDs:
 
             participant = DatabaseHelper.getRowFromDbByPrimaryKey(ReviewParticipantModel.ReviewParticipant, reviewerID)
             if participant.status != ReviewParticipantModel.ParticipantStatus.ACCEPTED:
@@ -79,7 +79,7 @@ class Review(Model):
         self.status = ReviewStatus.APPROVED 
         return True
         
-    def getReviewParticipantS(self) -> list:
+    def getReviewParticipants(self) -> list:
 
         from models.DatabaseModelHelper import DatabaseHelper
         return DatabaseHelper.getModelsFromDbQuery(ReviewParticipantModel.ReviewParticipant, "reviewId", self.reviewId)

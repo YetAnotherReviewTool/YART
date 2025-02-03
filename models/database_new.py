@@ -49,7 +49,8 @@ CREATE TABLE IF NOT EXISTS reviews (
 CREATE TABLE IF NOT EXISTS review_participants (
 	reviewID INTEGER NOT NULL,
 	userID INTEGER NOT NULL,
-	role TEXT NOT NULL,
+	role INT NOT NULL,
+	status INT NOT NULL,
 	PRIMARY KEY (reviewID, userID),
 	FOREIGN KEY(reviewID) REFERENCES reviews(reviewID),
 	FOREIGN KEY(userID) REFERENCES users(userID)

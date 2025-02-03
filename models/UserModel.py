@@ -42,7 +42,6 @@ class User(Model):
             salt = salt,
             password_hash = User.hash_password(salt, password_plain),
             admin = admin,
-            reviews = [],
         )
     
     def createReview(self, title: str, description: str):

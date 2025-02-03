@@ -1,9 +1,11 @@
+from models.DatabaseModelHelper import DatabaseHelper
 import userInterface
 from config.settings import read_config
-from models.DatabaseModelHelper import DatabaseHelper
+
 from models.UserModel import User
 from services.git_service import RepositoryHelper
 from services.session_service import Session
+from models.ReviewModel import Review
 
 
 if __name__ == "__main__":
