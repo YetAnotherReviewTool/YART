@@ -24,29 +24,36 @@ class Review(BaseModel, Model):
     creationDate: datetime
     reviewParticipants: list[int]
     comments: list[int]
+    # Don't use empty lists in default arguments. See:
+    # https://stackoverflow.com/questions/366422/how-can-i-avoid-issues-caused-by-pythons-early-bound-default-parameters-e-g-m
     def __init__(self,
                 reviewID: int,
                 authorID: int = -1,
                 title: str = "",
                 description: str = "",
                 status = ReviewStatus.IN_REVIEW,
-                commitID: list[int] = [],
+                commitID: list[int] | None = None,
                 fileLink = "",
                 creationDate = datetime.now(),
-                reviewParticipants: list[int] = [],
-                comments: list[int] = []
+                reviewParticipants: list[int] | None = None,
+                comments: list[int] | None = None
                 ):
-        
-        self.reviewID: int = reviewID
-        self.title: str = title
-        self.description: str = description
-        self.status: ReviewStatus = status
-        self.commitID: list[int] = commitID
-        self.fileLink: str = fileLink
-        self.creationDate: datetime.datetime = creationDate
-        self.authorID: int = authorID
-        self.reviewParticipantsUserIDs: list[int] = DatabaseHelper.getValuesFromDb(ReviewParticipantModel.ReviewParticipant, "userID", "reviewID", self.reviewId)
-        self.comments: list [int] = DatabaseHelper.getValuesFromDb(ReviewParticipantModel.ReviewParticipant, "commentId", "reviewID", self.reviewId)
+        if commitID is None:
+            commitID = list()
+        if reviewParticipants is None:
+            reviewParticipants = DatabaseHelper.getValuesFromDb(ReviewParticipantModel.ReviewParticipant, "userID", "reviewID", self.reviewID)
+        if comments is None:
+            comments = DatabaseHelper.getValuesFromDb(ReviewParticipantModel.ReviewParticipant, "commentID", "reviewID", self.reviewID)
+        self.reviewID = reviewID
+        self.title = title
+        self.description = description
+        self.status = status
+        self.commitID = commitID
+        self.fileLink = fileLink
+        self.creationDate = creationDate
+        self.authorID = authorID
+        self.reviewParticipants = reviewParticipants
+        self.comments = comments
 
     def assignReviewer(self, userID: int,
                        role: ReviewParticipantModel.ParticipantRole = ReviewParticipantModel.ParticipantRole.REVIEWER) -> None:
