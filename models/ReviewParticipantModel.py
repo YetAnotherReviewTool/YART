@@ -1,5 +1,6 @@
 import enum
 import models.CommentModel as CommentModel
+from models.model import Model
 from models.DatabaseModelHelper import DatabaseHelper
 
 class ParticipantRole(enum.Enum):
@@ -12,7 +13,7 @@ class ParticipantStatus(enum.Enum):
     IN_PROGRESS = enum.auto()
     ACCEPTED = enum.auto()
 
-class ReviewParticipant:
+class ReviewParticipant(Model):
     def __init__(self, userID: int,
                  reviewID: int,
                  role: ParticipantRole,
@@ -23,3 +24,21 @@ class ReviewParticipant:
         self.reviewID: int = reviewID
         self.role: ParticipantRole = role
         self.status: ParticipantStatus = isAccepted
+
+    def jsonify(self):
+        pass #TODO
+
+    def constructFromDbData(data):
+        participants_data = data
+        participants = []
+
+        for row in participants_data:
+            participants.append(ReviewParticipant(
+                userID=row["userID"],
+                reviewID=row["reviewID"],
+                role=ParticipantRole[row["role"]],
+                isAccepted=ParticipantStatus.IN_PROGRESS  # Default status if not stored explicitly
+            ))
+
+        return participants
+

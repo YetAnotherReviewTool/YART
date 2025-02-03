@@ -92,21 +92,6 @@ class DatabaseHelper:
         return DatabaseHelper.getRowFromDbByPrimaryKey(model, primaryKey)[parameter]
 
 
-    # def get_users(db: Database) -> list[User]:
-    #     users_data = db.getRowsFromTable("User")
-    #     users = []
-
-    #     for row in users_data:
-    #         users.append(User(
-    #             userID=row["userID"],
-    #             username=row["username"],
-    #             password_hash=row["password_hash"],
-    #             salt=row["salt"],
-    #             admin=bool(row["admin"])
-    #         ))
-
-    #     return users
-
     # def get_review_participants(db: Database) -> list[ReviewParticipant]:
     #     participants_data = db.getRowsFromTable("ReviewParticipant")
     #     participants = []

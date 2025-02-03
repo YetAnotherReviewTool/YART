@@ -96,6 +96,21 @@ class User(Model):
             "password_hash": self.password_hash,
             "admin": self.admin
         }
+    
+    def constructFromDbData(data):
+        users_data = data
+        users = []
+
+        for row in users_data:
+            users.append(User(
+                userID=row["userID"],
+                username=row["username"],
+                password_hash=row["password_hash"],
+                salt=row["salt"],
+                admin=bool(row["admin"])
+            ))
+
+        return users
         
 
 
