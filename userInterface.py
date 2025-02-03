@@ -248,6 +248,7 @@ class MainMenuFrame(QWidget):
         self.refresh_reviews()
 
     def refresh_reviews(self):
+        self.reviews = DatabaseHelper.getModelsFromDb(Review)
         for i in reversed(range(self.reviews_layout.count())):
             widget = self.reviews_layout.itemAt(i).widget()
             if widget is not None:
@@ -439,21 +440,9 @@ class AddNewReviewStep2Frame(QWidget):
         reviewBuilder = Session().getReviewBuilder()
 
         reviewBuilder.add_author(Session().getUserID())
-        # TODO add commits and reviewers choice
-        # reviewBuilder.add_commits()
-        # reviewBuilder.add_reviewers()
-        # reviewBuilder.add_title_and_desc(self.main_window.frames[2].title_input.text(), self.main_window.frames[2].description_input.text())
+
         review = reviewBuilder.build()
 
-        # FIXME
-        # review = {
-        #     "title": reviewBuilder._review.title,
-        #     "description": reviewBuilder._review.description,
-        #     "fileLink": reviewBuilder._review.fileLink,
-        #     "author": Session().user.username,
-        #     "commitId": reviewBuilder._review.commitId,
-        #     "reviewParticipants": reviewBuilder._review.reviewParticipants,
-        # }
         self.main_window.frames[1].reviews.append(review)
         QMessageBox.information(self, "Success", "Review added successfully!")
         self.main_window.navigate_to_frame(1)  # Navigate back to the main frame
@@ -513,11 +502,16 @@ class SettingsFrame(QWidget):
 
     def confirm_changes(self):
         if all([self.new_password_input.text(), self.old_password_input.text()]):
-            if Session().user.change_password(self.new_password_input.text(), self.old_password_input.text()):
+            if self.new_password_input.text() == self.old_password_input.text():
+                QMessageBox.information(self, "Invalid input", "New password must be different!")
+                return
+
+            if Session().user.change_password(self.old_password_input.text(), self.new_password_input.text()):
                 QMessageBox.information(self, "Settings Updated", "Successfully changed password!")
             else:
                 QMessageBox.information(self, "Settings Updated", "Invalid current password.")
-        QMessageBox.information(self, "Invalid input", "Do not leave empty fields!")
+        else:
+            QMessageBox.information(self, "Invalid input", "Do not leave empty fields!")
 
 
 class AdminPanelFrame(QWidget):

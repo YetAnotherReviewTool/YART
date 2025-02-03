@@ -55,14 +55,12 @@ class User(Model):
 
 
     def change_password(self, old_password, new_password) -> bool:
-        if User.verifyPassword(old_password):
+        if self.verifyPassword(old_password):
             self.salt = User.makeSalt()
-            self.password_hash =  User.hash_password(self.salt, new_password)
+            self.password_hash = User.hash_password(self.salt, new_password)
 
-
-
-            DatabaseHelper.updateDbRow(User, self.userID, "salt", self.salt)
-            DatabaseHelper.updateDbRow(User, self.userID, "password_hash", self.password_hash)
+            DatabaseHelper.updateDbRow(User, self.userID, "salt", "\"" + self.salt + "\"")
+            DatabaseHelper.updateDbRow(User, self.userID, "password_hash",  "\"" + self.password_hash + "\"")
             return True
         else:
             return False
