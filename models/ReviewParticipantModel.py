@@ -40,8 +40,8 @@ class ReviewParticipant(Model):
             participants.append(ReviewParticipant(
                 userID=row["userID"],
                 reviewID=row["reviewID"],
-                role=ParticipantRole[int(row["role"])],
-                isAccepted=ParticipantStatus[int(row["status"])]
+                role=ParticipantRole(int(row["role"])),
+                isAccepted=ParticipantStatus(int(row["status"]))
             ))
 
         return participants

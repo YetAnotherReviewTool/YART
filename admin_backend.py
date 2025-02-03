@@ -8,7 +8,7 @@ from models.DatabaseModelHelper import DatabaseHelper
 
 FILENAME = "review_statistics.csv"
 
-def generate_report(userID):
+def generate_report():
     """
         Generate a report for all reviews and export to a CSV file.
     """

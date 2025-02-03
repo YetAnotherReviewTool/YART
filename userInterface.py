@@ -817,7 +817,8 @@ class OwnReviewEditFrame(QWidget):
             f"Description: {review.description}\n"
             f"File Link: {review.fileLink}\n"
             f"Commit ID: {', '.join(map(str, review.commitId))}\n"
-            f"Review Participants: {', '.join(map(str, review.reviewParticipants))}\n"
+            f"Review Participants: "
+            f"{', '.join(map(str, review.getReviewParticipantsNames()))}\n"
         )
 
     def open_edit_review_popup(self):

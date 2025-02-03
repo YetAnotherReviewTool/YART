@@ -83,7 +83,17 @@ class Review(Model):
 
         from models.DatabaseModelHelper import DatabaseHelper
         return DatabaseHelper.getModelsFromDbQuery(ReviewParticipantModel.ReviewParticipant, "reviewId", self.reviewId)
-    
+
+    def getReviewParticipantsNames(self) -> list[str]:
+        participants = self.getReviewParticipants()
+        output = []
+        for participant in participants:
+            user = DatabaseHelper.getModelsFromDbQuery(UserModel.User, "userID",   participant.userID)
+            if len(user) <= 0:
+                raise ValueError(f"No user found with ID {participant.userID}")
+            output.append(user[0].username)
+        return output
+
     def jsonify(self) -> dict:
         return {
             "reviewId": self.reviewId,

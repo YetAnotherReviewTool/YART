@@ -4,7 +4,7 @@ from git import Commit
 
 from models.ReviewModel import Review
 from models.DatabaseModelHelper import DatabaseHelper
-from models.ReviewParticipantModel import ParticipantRole
+from models.ReviewParticipantModel import ParticipantRole, ReviewParticipant, ParticipantStatus
 from models.UserModel import User
 from services.git_service import RepositoryHelper
 
@@ -14,8 +14,10 @@ class ReviewBuilder:
     def __init__(self, helper: RepositoryHelper, title: str, description: str) -> None:
         super().__init__()
         self._helper = helper
-        self._review = Review(DatabaseHelper.getNextId(Review))
+        self.id = DatabaseHelper.getNextId(Review)
+        self._review = Review(self.id)
         self.add_title_and_desc(title, description)
+        self.reviewers = []
 
     def add_title_and_desc(self, title: str, description: str):
         self._review.title = title
@@ -33,12 +35,22 @@ class ReviewBuilder:
         if len(reviewers) < 0:
             raise ValueError(f"No user with username {reviewer}")
 
-        self._review.assignReviewer(int(reviewers[0].userID))
+        self.reviewers.append(
+            ReviewParticipant(
+                userID=reviewers[0].userID,
+                reviewID=self.id,
+                role=role,
+                isAccepted=ParticipantStatus.IN_PROGRESS
+            )
+        )
 
     def build(self):
-        return self._review
         self.saveToDb()
+        return self._review
 
     def saveToDb(self):
         # Call this after you're done with the Review object!! #TODO
         DatabaseHelper.insertIntoDbFromModel(Review, self._review)
+        for reviewer in self.reviewers:
+            DatabaseHelper.insertIntoDbFromModel(ReviewParticipant, reviewer)
+
