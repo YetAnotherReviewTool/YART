@@ -82,42 +82,14 @@ class DatabaseHelper:
 
     def getCompositePrimaryKeyColumnNames(model: type) -> list[str]:
         return DatabaseHelper.getCompositePrimaryKeyColumnNames(model)
-        
+    
 
-    def getUniqueValueFromDb(model: type, primaryKey: int, parameter: str) -> object:
-        """
-        Return the column value of the row specified by the primary key value.
-        """
-
-        return DatabaseHelper.getRowFromDbByPrimaryKey(model, primaryKey)[parameter]
+    def getValuesFromDb(model: Model, type: str, parameter: str, parameterValue: str) -> list:
+        return DatabaseHelper.DBInstance.getValuesFromTable(DatabaseHelper.modelToDbName(model), type, parameter, parameterValue)
 
 
-    # def get_review_participants(db: Database) -> list[ReviewParticipant]:
-    #     participants_data = db.getRowsFromTable("ReviewParticipant")
-    #     participants = []
 
-    #     for row in participants_data:
-    #         participants.append(ReviewParticipant(
-    #             userID=row["userID"],
-    #             reviewID=row["reviewID"],
-    #             role=ParticipantRole[row["role"]],
-    #             isAccepted=ParticipantStatus.IN_PROGRESS  # Default status if not stored explicitly
-    #         ))
 
-    #     return participants
 
-    # def get_comments(db: Database) -> list[Comment]:
-    #     comments_data = db.getRowsFromTable("Comment")
-    #     comments = []
 
-    #     for row in comments_data:
-    #         comments.append(Comment(
-    #             commentId=row["commentID"],
-    #             reviewID=row["reviewID"],
-    #             authorID=row["authorID"],
-    #             content=row["content"],
-    #             timestamp=datetime.datetime.strptime(row["timestamp"], "%Y-%m-%d")
-    #         ))
-
-    #     return comments
     

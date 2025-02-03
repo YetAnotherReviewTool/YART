@@ -22,8 +22,6 @@ class Review(Model):
                 commitId: list[int] = [],
                 fileLink = "",
                 creationDate = datetime.datetime.today(),
-                reviewParticipants: list[int] = [],
-                comments: list[int] = []
                 ):
         
         self.reviewId: int = reviewId
@@ -34,8 +32,8 @@ class Review(Model):
         self.fileLink: str = fileLink
         self.creationDate: datetime.datetime = creationDate
         self.authorId: int = authorId
-        self.reviewParticipants: list[int] = reviewParticipants
-        self.comments: list [int] = comments
+        self.reviewParticipantsUserIDs: list[int] = DatabaseHelper.getValuesFromDb(ReviewParticipantModel.ReviewParticipant, "userID", "reviewID", self.reviewId)
+        self.comments: list [int] = DatabaseHelper.getValuesFromDb(ReviewParticipantModel.ReviewParticipant, "commentId", "reviewID", self.reviewId)
 
     def assignReviewer(self, userID: int,
                        role: ReviewParticipantModel.ParticipantRole = ReviewParticipantModel.ParticipantRole.REVIEWER) -> None:
@@ -50,9 +48,8 @@ class Review(Model):
         )
 
         DatabaseHelper.insertIntoDbFromModel(ReviewParticipantModel.ReviewParticipant, newParticipant)
-
         self.reviewParticipants.append(userID)
-        DatabaseHelper.updateDbRow(Review, self.reviewId, "reviewParticipants", self.reviewParticipants)
+
 
     def seeComments(self) -> list:
         return DatabaseHelper.getModelsFromDbQuery(CommentModel.Comment, "reviewID", self.reviewId)
@@ -65,7 +62,6 @@ class Review(Model):
         DatabaseHelper.insertIntoDbFromModel(CommentModel.Comment, comment)
         self.comments.append(comment.commentId)
 
-        DatabaseHelper.updateDbRow(Review, self.reviewId, "comments", self.comments)
 
     def evaluateReview(self) -> bool:
         """
