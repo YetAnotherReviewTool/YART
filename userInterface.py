@@ -28,7 +28,7 @@ from config.settings import add_url
 from models.ReviewModel import Review
 from models.ReviewParticipantModel import ReviewParticipant, ParticipantStatus
 from services.git_service import RepositoryHelper
-from services.login_service import add_user
+from services.login_service import add_user, login
 from services.session_service import Session
 from models import CommentModel
 
@@ -161,23 +161,23 @@ class LoginFrame(QWidget):
         username = self.username_input.text()
         password = self.password_input.text()
 
-        # result = login(username, password)
-        # if result is None:
-        #     QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
-        # else:
-        #     self.main_window.user_role = result
-        #     self.main_window.navigate_to_frame(1)
+        result = login(username, password)
+        if result is None:
+            QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
+        else:
+            self.main_window.user_role = result
+            self.main_window.navigate_to_frame(1)
 
         # just for testing
 
-        if username == "admin" and password == "admin123":
-            self.main_window.user_role = "Administrator"
-            self.main_window.navigate_to_frame(1)
-        elif username and password:
-            self.main_window.user_role = "RegularUser"
-            self.main_window.navigate_to_frame(1)
-        else:
-            QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
+        # if username == "admin" and password == "admin123":
+        #     self.main_window.user_role = "Administrator"
+        #     self.main_window.navigate_to_frame(1)
+        # elif username and password:
+        #     self.main_window.user_role = "RegularUser"
+        #     self.main_window.navigate_to_frame(1)
+        # else:
+        #     QMessageBox.warning(self, "Login Failed", "Invalid credentials!")
 
 
 class MainMenuFrame(QWidget):

@@ -8,10 +8,13 @@ def add_user(username: str, password: str, admin: bool):
     DatabaseHelper.insertIntoDbFromModel(User, newUser)
 
 def login(username: str, password: str):
-    if not User.verifyPassword(username, password):
+    user = DatabaseHelper.getModelsFromDbQuery(User, "username", username)
+    if len(user) <= 0:
         return None
 
-    user = DatabaseHelper.getModelsFromDbQuery(User, "username", username)
+    if not user[0].verifyPassword(password):
+        return None
+
     session = Session()
     session.userID = user.userID
     if user.admin:
