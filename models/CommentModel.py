@@ -1,16 +1,23 @@
-import datetime
+from datetime import datetime
 from models.model import Model
+from pydantic import BaseModel
 
-class Comment(Model):
-    def __init__(self, commentId, reviewID, authorID, content, timestamp=datetime.datetime.today()):
-        self.commentId: int = commentId
+class Comment(BaseModel, Model):
+    commentID: int
+    reviewID: int
+    authorID: int
+    content: str
+    timestamp: datetime
+    def __init__(self, commentID, reviewID, authorID, content, timestamp=datetime.now()):
+        self.commentID: int = commentID
         self.reviewID: int = reviewID
         self.authorID: int = authorID
         self.content: str = content
-        self.timestamp: datetime.date = timestamp
+        self.timestamp: datetime = timestamp
 
     def __str__(self):
         return str(self.authorID) + " (" + str(self.timestamp) + ") " + ": " + self.content
+
 
     def jsonify(self):
         return super().jsonify()
@@ -21,11 +28,11 @@ class Comment(Model):
 
         for row in comments_data:
             comments.append(Comment(
-                commentId=row["commentID"],
+                commentID=row["commentID"],
                 reviewID=row["reviewID"],
                 authorID=row["authorID"],
                 content=row["content"],
-                timestamp=datetime.datetime.strptime(row["timestamp"], "%Y-%m-%d")
+                timestamp=datetime.strptime(row["timestamp"], "%Y-%m-%d")
             ))
 
         return comments

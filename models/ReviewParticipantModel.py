@@ -2,6 +2,7 @@ import enum
 import models.CommentModel as CommentModel
 from models.model import Model
 from models.DatabaseModelHelper import DatabaseHelper
+from pydantic import BaseModel
 
 class ParticipantRole(enum.Enum):
     AUTHOR = 1
@@ -13,17 +14,22 @@ class ParticipantStatus(enum.Enum):
     IN_PROGRESS = enum.auto()
     ACCEPTED = enum.auto()
 
-class ReviewParticipant(Model):
+class ReviewParticipant(BaseModel, Model):
+    userID: int
+    reviewID: int
+    role: ParticipantRole
+    status: ParticipantStatus
+
     def __init__(self, userID: int,
                  reviewID: int,
                  role: ParticipantRole,
                  isAccepted: ParticipantStatus,
                  ):
         
-        self.userID: int = userID
-        self.reviewID: int = reviewID
-        self.role: ParticipantRole = role
-        self.status: ParticipantStatus = isAccepted
+        self.userID = userID
+        self.reviewID = reviewID
+        self.role = role
+        self.status = isAccepted
 
     def jsonify(self):
         pass #TODO

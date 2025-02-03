@@ -2,6 +2,7 @@ import models.ReviewModel as ReviewModel
 from models.DatabaseModelHelper import DatabaseHelper
 from models.ReviewParticipantModel import ReviewParticipant
 from models.model import Model
+from pydantic import BaseModel
 
 import secrets
 import hashlib
@@ -17,25 +18,32 @@ class AccessError(PermissionError):
     """
     pass
 
-class User(Model):
+class User(BaseModel, Model):
+    userID: int
+    username: str
+    password_hash: str
+    salt: str
+    admin: bool
+    reviews: list[int]
     def __init__(self, 
                  userID: int, 
                  username: str, 
                  password_hash: str, 
                  salt: str = "",
                  admin: bool = False,
+                 reviews: list[int] | None = None,
                  ):
-        
-        self.userID: int = userID
-        self.username: str = username
-        self.password_hash: str = password_hash
-        self.salt: str = salt
-        self.admin: bool = admin
-
-        self.reviews: list[int] = DatabaseHelper.getValuesFromDb(ReviewParticipant, "reviewID", "userID", self.userID)
+        if reviews is None:
+            reviews = DatabaseHelper.getValuesFromDb(ReviewParticipant, "reviewID", "userID", self.userID)
+        self.userID = userID
+        self.username = username
+        self.password_hash = password_hash
+        self.salt = salt
+        self.admin = admin
+        self.reviews = reviews
 
     def new (username: str, password_plain: str, admin: bool = False):
-        salt: str = User.makeSalt()
+        salt = User.makeSalt()
         return User(
             userID = DatabaseHelper.getNextId(User),
             username = username,
