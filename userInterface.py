@@ -423,7 +423,7 @@ class AddNewReviewStep2Frame(QWidget):
         if reviewer:
             Session().getReviewBuilder().assign_reviewer(reviewer)
             QMessageBox.information(self, "Reviewer Added", f"Reviewer '{reviewer}' added successfully.")
-            self.reviewer_input.clear()
+            self.reviewer_input.removeItem(self.reviewer_input.currentIndex())
         else:
             QMessageBox.warning(self, "Error", "Reviewer username cannot be empty.")
 
@@ -639,7 +639,7 @@ class ReviewEvaluationFrame(QWidget):
             f"Description: {review.description}\n"
             f"File Link: {review.fileLink}\n"
             f"Commit ID: {', '.join(map(str, review.commitId))}\n"
-            f"Review Participants: {', '.join(map(str, review.reviewParticipants))}\n"
+            f"Review Participants: {', '.join(map(str, review.getReviewParticipantsNames()))}\n"
         )
     def open_add_comment_popup(self):
         dialog = AddCommentPopup(self.main_window)
@@ -1080,7 +1080,7 @@ class ViewReviewDetailsFrame(QWidget):
             f"Description: {review.description}\n"
             f"File Link: {review.fileLink}\n"
             f"Commit ID: {', '.join(map(str, review.commitId))}\n"
-            f"Review Participants: {', '.join(map(str, review.reviewParticipants))}\n"
+            f"Review Participants: {', '.join(map(str, review.getReviewParticipantsNames()))}\n"
         )
 
     def showEvent(self, event):

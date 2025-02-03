@@ -39,8 +39,8 @@ def test_valid_admin_login(qtbot, app, login_frame):
 
 def test_valid_user_login(qtbot, app, login_frame):
     """Test that a regular user login navigates to the main menu."""
-    login_frame.username_input.setText("username")
-    login_frame.password_input.setText("password")
+    login_frame.username_input.setText("stud")
+    login_frame.password_input.setText("stud")
 
     qtbot.mouseClick(login_frame.login_button, Qt.LeftButton)
 
