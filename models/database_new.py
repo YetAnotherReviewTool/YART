@@ -120,7 +120,7 @@ CREATE TABLE IF NOT EXISTS comments (
 	def getValuesFromTable(self, tableName: str, column: str, parameter: str, parameterValue: str):
 		cursor = self.conn.cursor()
 
-		query = f"SELECT {column} FROM {tableName} WHERE {parameter} = ?"
+		query = f"SELECT {column} FROM {Database.TABLE_NAME_MAP[tableName]} WHERE {parameter} = ?"
 		cursor.execute(query, (parameterValue,))
 		results = cursor.fetchall()
 
