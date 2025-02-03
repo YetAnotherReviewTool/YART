@@ -16,7 +16,7 @@ def login(username: str, password: str):
         return None
 
     session = Session()
-    session.userID = user.userID
-    if user.admin:
+    session.userID = user[0].userID
+    if user[0].admin:
         return "Administrator"
     return "RegularUser"
