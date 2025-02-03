@@ -1,5 +1,6 @@
 import models.ReviewModel as ReviewModel
 from models.DatabaseModelHelper import DatabaseHelper
+from models.model import Model
 
 import secrets
 import hashlib
@@ -15,7 +16,7 @@ class AccessError(PermissionError):
     """
     pass
 
-class User:
+class User(Model):
     def __init__(self, 
                  userID: int, 
                  username: str, 
@@ -86,6 +87,15 @@ class User:
                 ).digest()
             )
         )
+    
+    def jsonify(self):
+        return {
+            "userID": self.userID,
+            "username": self.username,
+            "salt": self.salt,
+            "password_hash": self.password_hash,
+            "admin": self.admin
+        }
         
 
 

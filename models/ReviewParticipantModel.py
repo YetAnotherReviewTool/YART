@@ -3,9 +3,9 @@ import models.CommentModel as CommentModel
 from models.DatabaseModelHelper import DatabaseHelper
 
 class ParticipantRole(enum.Enum):
-    AUTHOR = enum.auto()
-    REVIEWER = enum.auto()
-    OBSERVER = enum.auto()
+    AUTHOR = 1
+    REVIEWER = 2
+    OBSERVER = 3
 
 class ParticipantStatus(enum.Enum):
     REJECTED = enum.auto()

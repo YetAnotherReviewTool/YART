@@ -1,7 +1,5 @@
-from datetime import datetime
-
 from models.database_new import Database as DB
-
+from models.model import Model
 
 class DatabaseHelper:
     DBInstance = DB("database.db")
@@ -16,63 +14,60 @@ class DatabaseHelper:
         return DatabaseHelper.DBInstance.getRowsFromTable(DatabaseHelper.modelToDbName(model))
 
     def getRowsFromDbQuery(model: type, parameter: str, parameterValue: object) -> dict:
-        return DatabaseHelper.DBInstance.getRowsFromTableQuery(DatabaseHelper.modelToDbName(model), parameter,
-                                                               parameterValue)
+        return DatabaseHelper.DBInstance.getRowsFromTableQuery(DatabaseHelper.modelToDbName(model), parameter, parameterValue)
 
     def getRowsFromDbQueries(model: type, parameters: list[str], parameterValues: list[object]) -> dict:
-        return DatabaseHelper.DBInstance.getRowsFromTableQueries(DatabaseHelper.modelToDbName(model), parameters,
-                                                                 parameterValues)
+        return DatabaseHelper.DBInstance.getRowsFromTableQueries(DatabaseHelper.modelToDbName(model),parameters, parameterValues)
 
     def getRowFromDbByPrimaryKey(model: type, primaryKey: int):
         """
         Returns a single, unique row based on primary key.
         """
         return DatabaseHelper.getRowsFromDbQuery(model, DatabaseHelper.getPrimaryKeyColumnName(model), primaryKey)
-
+    
     def getRowFromDbByCompositeKey(model: type, primaryKeyVals: list[int]):
         """
         Returns a single, unique row based on primary key.
         Designed for compound key input to handle ReviewParticipant
         """
 
-        return DatabaseHelper.getRowsFromDbQueries(model, DatabaseHelper.getCompositePrimaryKeyColumnNames(model),
-                                                   primaryKeyVals)
+        return DatabaseHelper.getRowsFromDbQueries(model, DatabaseHelper.getCompositePrimaryKeyColumnNames(model), primaryKeyVals)
+
 
     def getModelsFromDb(model: type) -> list:
         """
         Return all review from the database. Not sure if useful. Felt cute, might delete later
         """
         # czekam na endpointy ale zakldam teraz ze to bedzie dict jsonwy gdzie klucze to kolumny #TODO
-        rows = DatabaseHelper.getRowsFromDb(DatabaseHelper.modelToDbName(model)).values()
-        return [model(*entry.values()) for entry in rows]
-
-    def getModelsFromDbQuery(model: type, parameter: str, parameterValue: object) -> list:
+        rows = DatabaseHelper.getRowsFromDb(model)
+        return model.constructFromDbData(rows)
+    
+    def getModelsFromDbQuery(model: Model, parameter: str, parameterValue: object) -> list:
         """
         Returns queried reviews from the database. Basically returns:
         SELECT * FROM ModelDb WHERE parameter = parameterValue
         and converts all rows to Models
         """
 
-        rows = DatabaseHelper.getRowsFromDbQuery(DatabaseHelper.modelToDbName(model), parameter,
-                                                 parameterValue).values()
-        return [model(*entry.values()) for entry in rows]
-
-    def getModelsFromDbQueries(model: type, parameters: list[str], parameterValues: list[object]) -> list:
+        rows = DatabaseHelper.getRowsFromDbQuery(model, parameter, parameterValue)
+        return model.constructFromDbData(rows)
+    
+    def getModelsFromDbQueries(model: Model, parameters: list[str], parameterValues: list[object]) -> list:
         """
         Returns queried reviews from the database. Basically returns:
         SELECT * FROM ModelDb WHERE parameter1 = parameterValue1 AND  parameter2 = parameterValue2 ...
         and converts all rows to Models
         """
 
-        rows = DatabaseHelper.getRowsFromDbQueries(DatabaseHelper.modelToDbName(model), parameters,
-                                                   parameterValues).values()
-        return [model(*entry.values()) for entry in rows]
+        rows = DatabaseHelper.getRowsFromDbQueries(model, parameters, parameterValues)
+        return model.constructFromDbData(rows)
 
-    def insertIntoDbFromModel(model: type, instance: object) -> None:
+    
+    def insertIntoDbFromModel(model: type, instance: Model) -> None:
         """
         Inserts a new row into the database for a given model.
         """
-        dictForm = {key: value for key, value in instance.__dict__.items()}
+        dictForm = instance.jsonify()
 
         DatabaseHelper.DBInstance.insertIntoTable(DatabaseHelper.modelToDbName(model), dictForm)
 
@@ -87,6 +82,7 @@ class DatabaseHelper:
 
     def getCompositePrimaryKeyColumnNames(model: type) -> list[str]:
         return DatabaseHelper.getCompositePrimaryKeyColumnNames(model)
+        
 
     def getUniqueValueFromDb(model: type, primaryKey: int, parameter: str) -> object:
         """
@@ -95,117 +91,48 @@ class DatabaseHelper:
 
         return DatabaseHelper.getRowFromDbByPrimaryKey(model, primaryKey)[parameter]
 
-    def get_reviews(self) -> list:
 
-        reviews_data = DatabaseHelper.DBInstance.getRowsFromTable("Review")
-        reviews = []
+    # def get_users(db: Database) -> list[User]:
+    #     users_data = db.getRowsFromTable("User")
+    #     users = []
 
-        for row in reviews_data:
-            from models.ReviewModel import Review
-            from models.ReviewModel import ReviewStatus
-            reviews.append(Review(
-                reviewID=row["reviewID"],
-                authorId=row["creatorId"],
-                title=row["title"],
-                description=row["description"],
-                status=ReviewStatus[row["status"]],
-                fileLink=row["fileLink"],
-                creationDate=datetime.datetime.strptime(row["creationDate"], "%Y-%m-%d")
-            ))
+    #     for row in users_data:
+    #         users.append(User(
+    #             userID=row["userID"],
+    #             username=row["username"],
+    #             password_hash=row["password_hash"],
+    #             salt=row["salt"],
+    #             admin=bool(row["admin"])
+    #         ))
 
-        return reviews
+    #     return users
 
-    def get_users(self) -> list:
-        users_data = DatabaseHelper.DBInstance.getRowsFromTable("User")
-        users = []
+    # def get_review_participants(db: Database) -> list[ReviewParticipant]:
+    #     participants_data = db.getRowsFromTable("ReviewParticipant")
+    #     participants = []
 
-        for row in users_data:
-            from models.UserModel import User
-            users.append(User(
-                userID=row["userID"],
-                username=row["username"],
-                password_hash=row["password_hash"],
-                salt=row["salt"],
-                admin=bool(row["admin"])
-            ))
+    #     for row in participants_data:
+    #         participants.append(ReviewParticipant(
+    #             userID=row["userID"],
+    #             reviewID=row["reviewID"],
+    #             role=ParticipantRole[row["role"]],
+    #             isAccepted=ParticipantStatus.IN_PROGRESS  # Default status if not stored explicitly
+    #         ))
 
-        return users
+    #     return participants
 
-    def get_review_participants(self) -> list:
-        participants_data = DatabaseHelper.DBInstance.getRowsFromTable("ReviewParticipant")
-        participants = []
+    # def get_comments(db: Database) -> list[Comment]:
+    #     comments_data = db.getRowsFromTable("Comment")
+    #     comments = []
 
-        for row in participants_data:
-            from models.ReviewParticipantModel import ReviewParticipant, ParticipantRole, ParticipantStatus
-            participants.append(ReviewParticipant(
-                userID=row["userID"],
-                reviewID=row["reviewID"],
-                role=ParticipantRole[row["role"]],
-                isAccepted=ParticipantStatus.IN_PROGRESS  # Default status if not stored explicitly
-            ))
+    #     for row in comments_data:
+    #         comments.append(Comment(
+    #             commentId=row["commentID"],
+    #             reviewID=row["reviewID"],
+    #             authorID=row["authorID"],
+    #             content=row["content"],
+    #             timestamp=datetime.datetime.strptime(row["timestamp"], "%Y-%m-%d")
+    #         ))
 
-        return participants
-
-    def get_comments(self) -> list:
-        comments_data = DatabaseHelper.DBInstance.getRowsFromTable("Comment")
-        comments = []
-
-        for row in comments_data:
-            from models.CommentModel import Comment
-            comments.append(Comment(
-                commentId=row["commentID"],
-                reviewID=row["reviewID"],
-                authorID=row["authorID"],
-                content=row["content"],
-                timestamp=datetime.strptime(row["timestamp"], "%Y-%m-%d")
-            ))
-
-        return comments
-
-    def fill_relations(self, reviews, users, review_participants):
-        pass
-        # TODO should i do it? 
-
-    def insert_reviews(self, reviews: list):
-        for review in reviews:
-            review_data = {
-                "reviewID": review.reviewID,
-                "title": review.title,
-                "description": review.description,
-                "status": review.status.name,
-                "fileLink": review.fileLink,
-                "creationDate": review.creationDate.strftime("%Y-%m-%d"),
-                "creatorId": review.authorId
-            }
-            DatabaseHelper.DBInstance.insertIntoTable("Review", review_data)
-
-    def insert_users(self, users: list):
-        for user in users:
-            user_data = {
-                "userID": user.userID,
-                "username": user.username,
-                "salt": user.salt,
-                "password_hash": user.password_hash,
-                "admin": int(user.admin)
-            }
-            DatabaseHelper.DBInstance.insertIntoTable("User", user_data)
-
-    def insert_review_participants(self, participants: list):
-        for participant in participants:
-            participant_data = {
-                "reviewID": participant.reviewID,
-                "userID": participant.userID,
-                "role": participant.role.name
-            }
-            DatabaseHelper.DBInstance.insertIntoTable("ReviewParticipant", participant_data)
-
-    def insert_comments(self, comments: list):
-        for comment in comments:
-            comment_data = {
-                "commentID": comment.commentId,
-                "reviewID": comment.reviewID,
-                "authorID": comment.authorID,
-                "content": comment.content,
-                "timestamp": comment.timestamp.strftime("%Y-%m-%d")
-            }
-            DatabaseHelper.DBInstance.insertIntoTable("Comment", comment_data)
+    #     return comments
+    

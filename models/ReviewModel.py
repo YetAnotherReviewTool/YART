@@ -1,6 +1,7 @@
 import models.CommentModel as CommentModel
 import models.UserModel as UserModel
 import models.ReviewParticipantModel as ReviewParticipantModel
+from models.model import Model
 from models.DatabaseModelHelper import DatabaseHelper
 import enum
 import datetime
@@ -8,24 +9,24 @@ import datetime
 
 
 class ReviewStatus(enum.Enum):
-    IN_REVIEW = enum.auto()
-    APPROVED = enum.auto()
+    IN_REVIEW = 1
+    APPROVED = 2
 
-class Review:
+class Review(Model):
     def __init__(self,
-                reviewID: int,
+                reviewId: int,
                 authorId: int = -1,
                 title: str = "",
                 description: str = "",
                 status = ReviewStatus.IN_REVIEW,
-                commitId = list(),
+                commitId: list[int] = [],
                 fileLink = "",
                 creationDate = datetime.datetime.today(),
                 reviewParticipants: list[int] = [],
                 comments: list[int] = []
                 ):
         
-        self.reviewID: int = reviewID
+        self.reviewId: int = reviewId
         self.title: str = title
         self.description: str = description
         self.status: ReviewStatus = status
@@ -51,7 +52,7 @@ class Review:
         DatabaseHelper.insertIntoDbFromModel(ReviewParticipantModel.ReviewParticipant, newParticipant)
 
         self.reviewParticipants.append(userID)
-        DatabaseHelper.updateDbRow(Review, self.reviewID, "reviewParticipants", self.reviewParticipants)
+        DatabaseHelper.updateDbRow(Review, self.reviewId, "reviewParticipants", self.reviewParticipants)
 
     def seeComments(self) -> list:
         return DatabaseHelper.getModelsFromDbQuery(CommentModel.Comment, "reviewID", self.reviewId)
@@ -74,7 +75,7 @@ class Review:
         """
         for reviewerID in self.reviewParticipants:
 
-            participant = ReviewParticipantModel.getFromDB(reviewerID)
+            participant = DatabaseHelper.getRowFromDbByPrimaryKey(ReviewParticipantModel.ReviewParticipant, reviewerID)
             if participant.status != ReviewParticipantModel.ParticipantStatus.ACCEPTED:
                 return False
 
@@ -84,7 +85,36 @@ class Review:
     def getReviewParticipantS(self) -> list:
 
         from models.DatabaseModelHelper import DatabaseHelper
-        return DatabaseHelper.getModelsFromDbQuery(ReviewParticipantModel.ReviewParticipant, "reviewId", self.reviewID)
+        return DatabaseHelper.getModelsFromDbQuery(ReviewParticipantModel.ReviewParticipant, "reviewId", self.reviewId)
+    
+    def jsonify(self) -> dict:
+        return {
+            "reviewId": self.reviewId,
+            "authorId": self.authorId,
+            "title": self.title,
+            "description": self.description,
+            "status": self.status.value,
+            "commitId": str(self.commitId),
+            "fileLink": self.fileLink,
+            "creationDate": self.creationDate.strftime("%Y-%m-%d"),
+            "authorId": self.authorId
+        }
 
+    def constructFromDbData(data: list):
+        reviews_data = data
+        reviews = []
+
+        for row in reviews_data:
+            reviews.append(Review(
+                row["reviewID"],
+                authorId=row["authorId"],
+                title=row["title"],
+                description=row["description"],
+                status=ReviewStatus(int(row["status"])),
+                fileLink=row["fileLink"],
+                creationDate=datetime.datetime.strptime(row["creationDate"], "%Y-%m-%d")
+            ))
+
+        return reviews
 
     

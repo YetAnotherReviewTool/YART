@@ -39,8 +39,9 @@ CREATE TABLE IF NOT EXISTS reviews (
 	status TEXT NOT NULL,
 	fileLink TEXT NOT NULL,
 	creationDate DATE NOT NULL,
-	creatorId INTEGER NOT NULL,
-	FOREIGN KEY(creatorID) REFERENCES users(userID)
+	commitId TEXT NOT NULL,
+	authorId INTEGER NOT NULL,
+	FOREIGN KEY(authorId) REFERENCES users(userID)
 )""")
 		self.cursor.execute(f"""
 CREATE TABLE IF NOT EXISTS review_participants (
