@@ -134,7 +134,7 @@ CREATE TABLE IF NOT EXISTS comments (
 		"""
         Returns the primary key column name for the table of the given model.
         """
-		table_name = self.TABLE_NAME_MAP.get(model.__name__.lower())
+		table_name = self.TABLE_NAME_MAP.get(model.__name__)
 		query = f"PRAGMA table_info({table_name})"
 
 		self.cursor.execute(query)

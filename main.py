@@ -1,5 +1,7 @@
 import userInterface
 from config.settings import read_config
+from models.DatabaseModelHelper import DatabaseHelper
+from models.UserModel import User
 from services.git_service import RepositoryHelper
 from services.session_service import Session
 
@@ -10,6 +12,9 @@ def init_repository(url: str, path: str):
     helper = RepositoryHelper(path, False, url)
 
 if __name__ == "__main__":
+    users = DatabaseHelper.getModelsFromDb(User)
+    for user in users:
+        print(user.username, user.password_hash, user.salt, user.admin)
     url, path = read_config()
     if path is None:
         Session().set_first_time()

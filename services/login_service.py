@@ -4,7 +4,9 @@ from services.session_service import Session
 
 def add_user(username: str, password: str, admin: bool):
     userId = DatabaseHelper.getNextId(User)
-    newUser = User(userId, username, password, admin)
+    newUser = User(userId, username, password, "", admin)
+    newUser.salt = User.makeSalt()
+    newUser.password_hash = User.hash_password(newUser.salt, password)
     DatabaseHelper.insertIntoDbFromModel(User, newUser)
 
 def login(username: str, password: str):
@@ -20,3 +22,10 @@ def login(username: str, password: str):
     if user[0].admin:
         return "Administrator"
     return "RegularUser"
+
+if __name__ == "__main__":
+    add_user("stud", "stud", False)
+    add_user("admin", "admin123", True)
+    users = DatabaseHelper.getModelsFromDb(User)
+    for user in users:
+        print(user.username, user.password_hash, user.salt)
