@@ -25,10 +25,15 @@ class ReviewBuilder:
         self._review.authorId = user_id
 
     def add_commit(self, review_hex: str):
-        self._review.commitId.append(int(review_hex, 16))   #  Looks good?
+        self._review.commitId.append(int(review_hex, 16))  # Looks good?
 
-    def assign_reviewer(self, reviewerID:str, role: ParticipantRole = ParticipantRole.REVIEWER):
-        self._review.assignReviewer(int(reviewerID, 16))
+    def assign_reviewer(self, reviewer: str, role: ParticipantRole = ParticipantRole.REVIEWER):
+        reviewers = DatabaseHelper.getModelsFromDbQuery(User, "username", reviewer[1:])
+
+        if len(reviewers) < 0:
+            raise ValueError(f"No user with username {reviewer}")
+
+        self._review.assignReviewer(int(reviewers[0].userID))
 
     def build(self):
         return self._review

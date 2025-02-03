@@ -25,8 +25,10 @@ import sys
 
 from admin_backend import generate_report
 from config.settings import add_url
+from models.DatabaseModelHelper import DatabaseHelper
 from models.ReviewModel import Review
 from models.ReviewParticipantModel import ReviewParticipant, ParticipantStatus
+from models.UserModel import User
 from services.git_service import RepositoryHelper
 from services.login_service import add_user, login
 from services.session_service import Session
@@ -186,12 +188,13 @@ class MainMenuFrame(QWidget):
     def __init__(self, main_window):
         super().__init__()
         self.main_window = main_window
-        self.reviews = [
-            Review(1, Session().getUserID(), "Review 1", "Description 1"),
-            Review(2, Session().getUserID(), "Review 2", "Description 2"),
-            Review(3, Session().getUserID() + 3, "Review 3", "Description 3")
-
-        ]
+        self.reviews = DatabaseHelper.getModelsFromDb(Review)
+        # self.reviews = [
+        #     Review(1, Session().getUserID(), "Review 1", "Description 1"),
+        #     Review(2, Session().getUserID(), "Review 2", "Description 2"),
+        #     Review(3, Session().getUserID() + 3, "Review 3", "Description 3")
+        #
+        # ]
         # self.reviews = [
         #     {"title": "Review 1", "author": "User A"},
         #     {"title": "Review 2", "author": "User B"},
@@ -362,8 +365,9 @@ class AddNewReviewStep2Frame(QWidget):
         form_widget = QWidget()
         form_layout = QFormLayout(form_widget)
 
-        self.reviewer_input = QLineEdit(self)
-        self.reviewer_input.setPlaceholderText("Reviewer Username")
+        self.reviewer_input = QComboBox(self)
+        #self.reviewer_input.setPlaceholderText("Reviewer Username")
+        #self.populate_reviewers_combo()
         form_layout.addRow("Assign Reviewer:", self.reviewer_input)
 
         self.commit_combo = QComboBox(self)
@@ -402,8 +406,19 @@ class AddNewReviewStep2Frame(QWidget):
             for commit in commits:
                 self.commit_combo.addItem(f"{commit[0]} - {commit[1]}")
 
+    def populate_reviewers_combo(self):
+        users = DatabaseHelper.getModelsFromDb(User)
+        session = Session()
+        if users:
+            for user in users:
+                if user.userID != session.getUserID():
+                    self.reviewer_input.addItem(f"@{user.username}")
+
+    def showEvent(self, event):
+        self.populate_reviewers_combo()
+
     def add_reviewer(self):
-        reviewer = self.reviewer_input.text().strip()
+        reviewer = self.reviewer_input.currentText().strip()
         if reviewer:
             Session().getReviewBuilder().assign_reviewer(reviewer)
             QMessageBox.information(self, "Reviewer Added", f"Reviewer '{reviewer}' added successfully.")
