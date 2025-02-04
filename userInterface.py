@@ -430,9 +430,11 @@ class AddNewReviewStep2Frame(QWidget):
     def populate_reviewers_combo(self):
         users = DatabaseHelper.getModelsFromDb(User)
         session = Session()
+        current_review = session.getReviewBuilder()._review
+        current_participants = [participant.userID for participant in current_review.getReviewParticipants()]
         if users:
             for user in users:
-                if user.userID != session.getUserID():
+                if user.userID != session.getUserID() and user.userID not in current_participants:
                     self.reviewer_input.addItem(f"@{user.username}")
 
     def showEvent(self, event):
@@ -963,9 +965,6 @@ class OwnReviewAddCommentPopup(QDialog):
         form_layout.addRow("Assign Reviewer:", self.reviewer_input)
         form_layout.addRow("Commit ID:", self.commit_combo)
 
-        self.populate_commit_combo()
-        self.populate_reviewers_combo()
-
         self.add_reviewer_button = QPushButton("Add Reviewer", self)
         self.add_reviewer_button.clicked.connect(self.add_reviewer)
         form_layout.addWidget(self.add_reviewer_button)
@@ -1000,6 +999,8 @@ class OwnReviewAddCommentPopup(QDialog):
         self.title_input.setText(review.title)
         self.description_input.setText(review.description)
         self.file_link_input.setText(review.fileLink)
+        self.populate_commit_combo()
+        self.populate_reviewers_combo()
 
     def populate_commit_combo(self):
         session = Session()
@@ -1010,10 +1011,11 @@ class OwnReviewAddCommentPopup(QDialog):
 
     def populate_reviewers_combo(self):
         users = DatabaseHelper.getModelsFromDb(User)
+        current_participants = [participant.userID for participant in self.review.getReviewParticipants()]
         session = Session()
         if users:
             for user in users:
-                if user.userID != session.getUserID():
+                if user.userID != session.getUserID() and user.userID not in current_participants:
                     self.reviewer_input.addItem(f"@{user.username}")
 
     def add_reviewer(self):
