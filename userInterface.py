@@ -784,24 +784,25 @@ class VerdictPopup(QDialog):
         if verdict:
             session = Session()
             user_id = session.getUserID()
-            review_participant = DatabaseHelper.getRowFromDbByCompositeKey(
+            review_participants = DatabaseHelper.getRowFromDbByCompositeKey(
                 ReviewParticipantModel.ReviewParticipant, [self.review.reviewId, user_id]
             )
+            reviewers = ReviewParticipantModel.ReviewParticipant.constructFromDbData(review_participants)
 
-            if not review_participant:
+            if len(reviewers) <= 0:
                 QMessageBox.warning(self, "Error", "You are not a participant in this review.")
                 return
 
             if verdict.lower() == "accepted":
-                review_participant.status = ReviewParticipantModel.ParticipantStatus.ACCEPTED
+                reviewers[0].status = ReviewParticipantModel.ParticipantStatus.ACCEPTED
             else:
-                review_participant.status = ReviewParticipantModel.ParticipantStatus.REJECTED
+                reviewers[0].status = ReviewParticipantModel.ParticipantStatus.REJECTED
 
-            DatabaseHelper.updateDbRow(
+            DatabaseHelper.updateRowByCompositeKey(
                 ReviewParticipantModel.ReviewParticipant, 
                 [self.review.reviewId, user_id], 
                 "status", 
-                review_participant.status.value
+                reviewers[0].status.value
             )
             QMessageBox.information(self, "Verdict Submitted", f"The review has been {verdict.lower()}.")
             self.close()

@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS comments (
 		cursor = self.conn.cursor()
 		
 		conditions = " AND ".join([f"{param} = ?" for param in parameters])
-		query = f"SELECT * FROM {tableName} WHERE {conditions}"
+		query = f"SELECT * FROM {Database.TABLE_NAME_MAP[tableName]} WHERE {conditions}"
 		cursor.execute(query, parameterValues)
 		rows = cursor.fetchall()
 		
@@ -156,7 +156,7 @@ CREATE TABLE IF NOT EXISTS comments (
 		self.cursor.execute(query)
 		columns = self.cursor.fetchall()
 
-		primary_keys = [col[1] for col in columns if col[5] == 1]
+		primary_keys = [col[1] for col in columns if col[5] != 0]
 		
 		if not primary_keys:
 			raise ValueError(f"No primary key found for model {model.__name__}")
@@ -174,6 +174,23 @@ CREATE TABLE IF NOT EXISTS comments (
 		self.cursor = self.conn.cursor()
 		self.cursor.execute(query)
 		self.conn.commit()
+
+	def updateDbRowWithComposite(self, model: type, primaryKeys: list, primaryKeyValues, parameterToChange: str,
+								 parameterValue:
+	object):
+		"""
+		Update the column value for a selected row given by the primary key.
+		"""
+		table_name = self.TABLE_NAME_MAP.get(model.__name__)
+
+
+		conditions = " AND ".join([f"{param} = ?" for param in primaryKeys])
+		query = f"UPDATE {table_name} SET {parameterToChange} = {parameterValue} WHERE {conditions}"
+
+		self.cursor = self.conn.cursor()
+		self.cursor.execute(query, primaryKeyValues)
+		self.conn.commit()
+
 
 	def getNextId(self, model: type) -> int:
 		"""
