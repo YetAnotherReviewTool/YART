@@ -269,7 +269,8 @@ class MainMenuFrame(QWidget):
                 widget.deleteLater()
 
         for review in self.reviews[:4]:
-            button = QPushButton(review.title, self)
+            author_username = review.get_username(review.authorId)
+            button = QPushButton(f"{review.title} (Author: {author_username})", self)
             button.clicked.connect(self.create_open_review_callback(review))
             self.reviews_layout.addWidget(button)
             
@@ -652,9 +653,10 @@ class ReviewEvaluationFrame(QWidget):
 
     def set_review(self, review):
         self.review = review
+        author_username = review.get_username(review.authorId)
         self.review_details.setText(
             f"Title: {review.title}\n"
-            f"Author: {review.authorId}\n"
+            f"Author: {author_username}\n"
             f"Description: {review.description}\n"
             f"File Link: {review.fileLink}\n"
             f"Commit ID: {', '.join(map(str, review.commitId))}\n"
@@ -774,7 +776,7 @@ class VerdictPopup(QDialog):
     def set_review(self, review):
         self.review = review
         comments = review.seeComments()
-        comments_text = "\n\n".join([f"{comment.authorID}: {comment.content}" for comment in comments])
+        comments_text = "\n\n".join([f"{review.get_username(comment.authorID)}: {comment.content}" for comment in comments])
         self.comments_display.setText(comments_text)
 
     def submit_verdict(self):
@@ -854,9 +856,10 @@ class OwnReviewEditFrame(QWidget):
 
     def set_review(self, review):
         self.review = review
+        author_username = review.get_username(review.authorId)
         self.review_details.setText(
             f"Title: {review.title}\n"
-            f"Author: {review.authorId}\n"
+            f"Author: {author_username}\n"
             f"Description: {review.description}\n"
             f"File Link: {review.fileLink}\n"
             f"Commit ID: {', '.join(map(str, review.commitId))}\n"
@@ -911,15 +914,6 @@ class OwnReviewCommentsPopup(QDialog):
         
     def set_review(self, review):
         self.review = review
-        self.review_details.setText(
-            f"Title: {review.title}\n"
-            f"Author: {review.authorId}\n"
-            f"Description: {review.description}\n"
-            f"File Link: {review.fileLink}\n"
-            f"Commit ID: {', '.join(map(str, review.commitId))}\n"
-            f"Review Participants: "
-            f"{', '.join(map(str, review.getReviewParticipantsNames()))}\n"
-        )
         self.display_comments()
     
     def display_comments(self):
@@ -1079,7 +1073,8 @@ class ViewAllReviewsFrame(QWidget):
                 widget.deleteLater()
 
         for review in self.main_window.frames[1].reviews:
-            button = QPushButton(f"{review.title} (Author: {review.authorId})", self)
+            author_username = review.get_username(review.authorId)
+            button = QPushButton(f"{review.title} (Author: {author_username})", self)
             button.clicked.connect(lambda checked, r=review: self.open_review_details(r))
             self.reviews_layout.addWidget(button)
 
@@ -1135,9 +1130,10 @@ class ViewReviewDetailsFrame(QWidget):
 
     def set_review(self, review):
         self.review = review
+        author_username = review.get_username(review.authorId)
         self.review_details.setText(
             f"Title: {review.title}\n"
-            f"Author: {review.authorId}\n"
+            f"Author: {author_username}\n"
             f"Description: {review.description}\n"
             f"File Link: {review.fileLink}\n"
             f"Commit ID: {', '.join(map(str, review.commitId))}\n"
@@ -1193,7 +1189,7 @@ class AddReviewCommentFrame(QWidget):
 
     def display_comments(self):
         comments = self.review.seeComments()
-        comments_text = "\n\n".join(comments)
+        comments_text = "\n\n".join([str(comment) for comment in comments])
         self.comments_display.setText(comments_text)
 
 class MainWindow(QMainWindow):

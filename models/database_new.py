@@ -114,7 +114,7 @@ CREATE TABLE IF NOT EXISTS comments (
 		cursor = self.conn.cursor()
 		
 		conditions = " AND ".join([f"{param} = ?" for param in parameters])
-		query = f"SELECT * FROM {Database.TABLE_NAME_MAP[tableName]} WHERE {conditions}"
+		query = f"SELECT * FROM {tableName} WHERE {conditions}"
 		cursor.execute(query, parameterValues)
 		rows = cursor.fetchall()
 		

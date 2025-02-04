@@ -84,6 +84,12 @@ class Review(Model):
         from models.DatabaseModelHelper import DatabaseHelper
         return DatabaseHelper.getModelsFromDbQuery(ReviewParticipantModel.ReviewParticipant, "reviewId", self.reviewId)
 
+    def get_username(self, user_id):
+        user = DatabaseHelper.getModelsFromDbQuery(UserModel.User, "userID", user_id)
+        if len(user) > 0:
+            return user[0].username
+        return "Unknown"
+    
     def getReviewParticipantsNames(self) -> list[str]:
         participants = self.getReviewParticipants()
         output = []

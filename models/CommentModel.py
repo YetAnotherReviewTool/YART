@@ -28,12 +28,16 @@ class Comment(Model):
         comments = []
 
         for row in comments_data:
+            try:
+                timestamp = datetime.datetime.strptime(row["timestamp"], "%Y-%m-%d %H:%M:%S")
+            except ValueError:
+                timestamp = datetime.datetime.strptime(row["timestamp"], "%Y-%m-%d")
             comments.append(Comment(
-                commentId=row["commentID"],
+                commentID=row["commentID"],
                 reviewID=row["reviewID"],
                 authorID=row["authorID"],
                 content=row["content"],
-                timestamp=datetime.datetime.strptime(row["timestamp"], "%Y-%m-%d")
+                timestamp=timestamp
             ))
 
         return comments
