@@ -837,15 +837,15 @@ class OwnReviewEditFrame(QWidget):
         center_layout = QVBoxLayout()
         center_layout.setAlignment(Qt.AlignCenter)
 
-        self.review_label = QLabel("Edit Your Review:", self)
-        center_layout.addWidget(self.review_label)
+        # self.review_label = QLabel("Edit Your Review:", self)
+        # center_layout.addWidget(self.review_label)
 
         self.review_details = QLabel("", self)
         center_layout.addWidget(self.review_details)
 
-        self.edit_review_button = QPushButton("Edit Review", self)
-        self.edit_review_button.clicked.connect(self.open_edit_review_popup)
-        center_layout.addWidget(self.edit_review_button)
+        # self.edit_review_button = QPushButton("Edit Review", self)
+        # self.edit_review_button.clicked.connect(self.open_edit_review_popup)
+        # center_layout.addWidget(self.edit_review_button)
 
         self.see_comments_button = QPushButton("See Comments", self)
         self.see_comments_button.clicked.connect(self.open_see_comments_popup)
@@ -875,9 +875,10 @@ class OwnReviewEditFrame(QWidget):
         )
 
     def open_edit_review_popup(self):
-        dialog = OwnReviewAddCommentPopup(self.main_window)
-        dialog.set_review(self.review)
-        dialog.exec_()
+        # dialog = OwnReviewAddCommentPopup(self.main_window)
+        # dialog.set_review(self.review)
+        # dialog.exec_()
+        pass
 
     def open_see_comments_popup(self):
         dialog = OwnReviewCommentsPopup(self.main_window)

@@ -68,7 +68,6 @@ def read_config():
 
     if "LOGGING" in config:
         configure_logging(config["LOGGING"])
-    print("LOGGING" in config)
     return configure_repository(config["REPOSITORY"])
 
 
