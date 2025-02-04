@@ -25,6 +25,7 @@ import sys
 
 from admin_backend import generate_report
 from config.settings import add_url
+from models import ReviewParticipantModel
 from models.DatabaseModelHelper import DatabaseHelper
 from models.ReviewModel import Review
 from models.ReviewParticipantModel import ReviewParticipant, ParticipantStatus
@@ -248,7 +249,20 @@ class MainMenuFrame(QWidget):
         self.refresh_reviews()
 
     def refresh_reviews(self):
-        self.reviews = DatabaseHelper.getModelsFromDb(Review)
+        session = Session()
+        user_id = session.getUserID()
+        author_reviews = DatabaseHelper.getModelsFromDbQuery(Review, "authorId", user_id)
+        
+        participant_reviews = DatabaseHelper.getModelsFromDbQuery(ReviewParticipantModel.ReviewParticipant, "userID", user_id)
+        participant_review_ids = [participant.reviewID for participant in participant_reviews]
+        participant_reviews = []
+        for x in participant_review_ids:
+            participant_reviews.append(DatabaseHelper.getModelsFromDbQuery(Review, "reviewId", x))
+
+        flattened_participant_reviews = [review for sublist in participant_reviews for review in sublist]
+        self.reviews = list({review.reviewId: review for review in author_reviews + flattened_participant_reviews}.values())
+
+
         for i in reversed(range(self.reviews_layout.count())):
             widget = self.reviews_layout.itemAt(i).widget()
             if widget is not None:
@@ -256,8 +270,13 @@ class MainMenuFrame(QWidget):
 
         for review in self.reviews[:4]:
             button = QPushButton(review.title, self)
-            button.clicked.connect(lambda checked, r=review: self.open_review(r))
+            button.clicked.connect(self.create_open_review_callback(review))
             self.reviews_layout.addWidget(button)
+            
+    def create_open_review_callback(self, review):
+        def callback():
+            self.open_review(review)
+        return callback
 
     def showEvent(self, event):
         self.admin_panel_button.setEnabled(self.main_window.user_role == "Administrator")
@@ -643,7 +662,7 @@ class ReviewEvaluationFrame(QWidget):
         )
     def open_add_comment_popup(self):
         dialog = AddCommentPopup(self.main_window)
-        self.main_window.frames[7].set_review(self.review)
+        dialog.set_review(self.review)
         dialog.exec_()
 
     def open_verdict_popup(self):
@@ -673,7 +692,7 @@ class AddCommentPopup(QDialog):
         center_layout.addWidget(self.comment_input)
 
         self.save_button = QPushButton("Save", self)
-        self.save_button.clicked.connect(self.save_comment)
+        self.save_button.clicked.connect(lambda: self.save_comment(self.review))
         center_layout.addWidget(self.save_button)
 
         self.cancel_button = QPushButton("Cancel", self)
@@ -689,11 +708,20 @@ class AddCommentPopup(QDialog):
     def set_review(self, review):
         self.review = review
 
-    def save_comment(self):
-        comment_text = self.comment_input.toPlainText()
+    def save_comment(self, review):
+        if review is None:
+            QMessageBox.warning(self, "Error", "No review selected.")
+            return
+
+        comment_text = self.comment_input.toPlainText().strip()
         if comment_text:
-            self.review.addComments(Session().getUserID(), comment_text)
+            comment_id = DatabaseHelper.getNextId(CommentModel.Comment)
+            review_id = self.review.reviewId
+            comment = CommentModel.Comment(comment_id, review_id, Session().getUserID(), comment_text)
+            review.addComments(Session().getUserID(),comment)
+            DatabaseHelper.addModelToDb(comment)
             QMessageBox.information(self, "Comment Saved", "Your comment has been saved.")
+            self.review = review
             self.close()
         else:
             QMessageBox.warning(self, "Error", "Comment cannot be empty.")
@@ -745,19 +773,34 @@ class VerdictPopup(QDialog):
 
     def set_review(self, review):
         self.review = review
-        comments = review.get("comments", [])
-        self.comments_display.setText("\n".join(comments))
+        comments = review.seeComments()
+        comments_text = "\n\n".join([f"{comment.authorID}: {comment.content}" for comment in comments])
+        self.comments_display.setText(comments_text)
 
     def submit_verdict(self):
         verdict = self.verdict_combo.currentText()
         if verdict:
-            reviewParticipant: ReviewParticipant = getReviewParticipant(self.review.reviedId, Session().getUserID())
+            session = Session()
+            user_id = session.getUserID()
+            review_participant = DatabaseHelper.getRowFromDbByCompositeKey(
+                ReviewParticipantModel.ReviewParticipant, [self.review.reviewId, user_id]
+            )
 
-            if self.verdict.lower() == "Accepted":
-                reviewParticipant.status = ParticipantStatus.ACCEPTED
+            if not review_participant:
+                QMessageBox.warning(self, "Error", "You are not a participant in this review.")
+                return
+
+            if verdict.lower() == "accepted":
+                review_participant.status = ReviewParticipantModel.ParticipantStatus.ACCEPTED
             else:
-                reviewParticipant.status = ParticipantStatus.REJECTED
+                review_participant.status = ReviewParticipantModel.ParticipantStatus.REJECTED
 
+            DatabaseHelper.updateDbRow(
+                ReviewParticipantModel.ReviewParticipant, 
+                [self.review.reviewId, user_id], 
+                "status", 
+                review_participant.status.value
+            )
             QMessageBox.information(self, "Verdict Submitted", f"The review has been {verdict.lower()}.")
             self.close()
         else:
@@ -838,6 +881,8 @@ class OwnReviewCommentsPopup(QDialog):
     def __init__(self, main_window):
         super().__init__(main_window)
         self.setWindowTitle("Review Comments")
+        self.review = None
+        self.review_details = None
         self.setup_ui()
 
     def setup_ui(self):
@@ -851,7 +896,6 @@ class OwnReviewCommentsPopup(QDialog):
 
         # Placeholder for comments
         self.comments_list = QTextEdit(self)
-        self.comments_list.setText("Comment 1: Great work!\nComment 2: Needs improvement in section 2.")
         self.comments_list.setReadOnly(True)
         center_layout.addWidget(self.comments_list)
 
@@ -864,6 +908,24 @@ class OwnReviewCommentsPopup(QDialog):
         layout.addStretch()
 
         self.setLayout(layout)
+        
+    def set_review(self, review):
+        self.review = review
+        self.review_details.setText(
+            f"Title: {review.title}\n"
+            f"Author: {review.authorId}\n"
+            f"Description: {review.description}\n"
+            f"File Link: {review.fileLink}\n"
+            f"Commit ID: {', '.join(map(str, review.commitId))}\n"
+            f"Review Participants: "
+            f"{', '.join(map(str, review.getReviewParticipantsNames()))}\n"
+        )
+        self.display_comments()
+    
+    def display_comments(self):
+        comments = self.review.seeComments()
+        comments_text = "\n\n".join([f"{comment.authorID}: {comment.content}" for comment in comments])
+        self.comments_list.setText(comments_text)
 
 
 class OwnReviewAddCommentPopup(QDialog):
@@ -963,10 +1025,9 @@ class OwnReviewAddCommentPopup(QDialog):
             self.review.title = self.title_input.text().strip()
             self.review.description = self.description_input.text().strip()
             self.review.fileLink = self.file_link_input.text().strip()
-            # FIXME Update when database is implemented
-            #DatabaseHelper.updateDbRow(Review, self.review.reviewId, "title", self.review.title)
-            #DatabaseHelper.updateDbRow(Review, self.review.reviewId, "description", self.review.description)
-            #DatabaseHelper.updateDbRow(Review, self.review.reviewId, "fileLink", self.review.fileLink)
+            DatabaseHelper.updateDbRow(Review, self.review.reviewId, "title", self.review.title)
+            DatabaseHelper.updateDbRow(Review, self.review.reviewId, "description", self.review.description)
+            DatabaseHelper.updateDbRow(Review, self.review.reviewId, "fileLink", self.review.fileLink)
             QMessageBox.information(self, "Review Updated", "Your review has been updated.")
             self.close()
         else:
