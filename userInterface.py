@@ -719,7 +719,7 @@ class AddCommentPopup(QDialog):
             review_id = self.review.reviewId
             comment = CommentModel.Comment(comment_id, review_id, Session().getUserID(), comment_text)
             review.addComments(Session().getUserID(),comment)
-            DatabaseHelper.addModelToDb(comment)
+            #DatabaseHelper.addModelToDb(comment)# to juz sie robi w AddComments
             QMessageBox.information(self, "Comment Saved", "Your comment has been saved.")
             self.review = review
             self.close()

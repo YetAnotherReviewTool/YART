@@ -61,7 +61,7 @@ class Review(Model):
             raise UserModel.AccessError
 
         DatabaseHelper.insertIntoDbFromModel(CommentModel.Comment, comment)
-        self.comments.append(comment.commentId)
+        self.comments.append(comment.commentID)
 
 
     def evaluateReview(self) -> bool:

@@ -145,6 +145,23 @@ CREATE TABLE IF NOT EXISTS comments (
 			if col[5] == 1:
 				return col[1]
 		raise ValueError(f"No primary key found for model {model.__name__}")
+	
+	def getCompositePrimaryKeyColumnNames(self, model: type) -> list[str]:
+		"""
+		Returns a list of primary key column names for the table of the given model.
+		"""
+		table_name = self.TABLE_NAME_MAP.get(model.__name__)
+		query = f"PRAGMA table_info({table_name})"
+
+		self.cursor.execute(query)
+		columns = self.cursor.fetchall()
+
+		primary_keys = [col[1] for col in columns if col[5] == 1]
+		
+		if not primary_keys:
+			raise ValueError(f"No primary key found for model {model.__name__}")
+		
+		return primary_keys
 
 	def updateDbRow(self, model: type, primaryKeyValue: int, parameterToChange: str, parameterValue: object):
 		"""

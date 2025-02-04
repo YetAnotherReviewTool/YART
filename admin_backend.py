@@ -36,7 +36,7 @@ def generate_report():
                 ", ".join(map(str, review.commitId)),
                 review.creationDate.strftime("%Y-%m-%d %H:%M:%S"),
                 review.authorId,
-                ", ".join(map(str, review.reviewParticipants))
+                ", ".join(map(str, review.getReviewParticipants()))
             ])
 
         writer.writerow([])

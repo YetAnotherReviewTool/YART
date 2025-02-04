@@ -13,7 +13,15 @@ class Comment(Model):
         return str(self.authorID) + " (" + str(self.timestamp) + ") " + ": " + self.content
 
     def jsonify(self):
-        return super().jsonify()
+        dict = {
+            "commentID": self.commentID,
+            "reviewID": self.reviewID,
+            "authorID": self.authorID,
+            "content": self.content,
+            "timestamp": self.timestamp.strftime("%Y-%m-%d")
+        }
+        print (dict)
+        return dict
     
     def constructFromDbData(data):
         comments_data = data

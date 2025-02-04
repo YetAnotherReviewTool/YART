@@ -87,7 +87,7 @@ class DatabaseHelper:
         return DatabaseHelper.DBInstance.getPrimaryKeyColumnName(model)
 
     def getCompositePrimaryKeyColumnNames(model: type) -> list[str]:
-        return DatabaseHelper.getCompositePrimaryKeyColumnNames(model)
+        return DatabaseHelper.DBInstance.getCompositePrimaryKeyColumnNames(model)
 
     def getValuesFromDb(model: Model, type: str, parameter: str, parameterValue: str) -> list:
         return DatabaseHelper.DBInstance.getValuesFromTable(DatabaseHelper.modelToDbName(model), type, parameter,
