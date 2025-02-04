@@ -848,6 +848,10 @@ class OwnReviewEditFrame(QWidget):
         self.see_comments_button = QPushButton("See Comments", self)
         self.see_comments_button.clicked.connect(self.open_see_comments_popup)
         center_layout.addWidget(self.see_comments_button)
+        
+        self.see_participants_button = QPushButton("See Evaluation", self)
+        self.see_participants_button.clicked.connect(self.open_see_participants_popup)
+        center_layout.addWidget(self.see_participants_button)
 
         layout.addStretch()
         layout.addLayout(center_layout)
@@ -875,6 +879,11 @@ class OwnReviewEditFrame(QWidget):
 
     def open_see_comments_popup(self):
         dialog = OwnReviewCommentsPopup(self.main_window)
+        dialog.set_review(self.review)
+        dialog.exec_()
+        
+    def open_see_participants_popup(self):
+        dialog = ReviewParticipantsPopup(self.main_window)
         dialog.set_review(self.review)
         dialog.exec_()
 
@@ -1205,6 +1214,48 @@ class AddReviewCommentFrame(QWidget):
         comments = self.review.seeComments()
         comments_text = "\n\n".join([str(comment) for comment in comments])
         self.comments_display.setText(comments_text)
+        
+class ReviewParticipantsPopup(QDialog):
+    """Frame F15: Review Participants (Pop-up)"""
+
+    def __init__(self, main_window):
+        super().__init__(main_window)
+        self.setWindowTitle("Review Participants")
+        self.main_window = main_window
+        self.review = None
+        self.setup_ui()
+
+    def setup_ui(self):
+        layout = QVBoxLayout()
+
+        center_layout = QVBoxLayout()
+        center_layout.setAlignment(Qt.AlignCenter)
+
+        self.participants_label = QLabel("Participants for this review:", self)
+        center_layout.addWidget(self.participants_label)
+
+        self.participants_list = QTextEdit(self)
+        self.participants_list.setReadOnly(True)
+        center_layout.addWidget(self.participants_list)
+
+        self.close_button = QPushButton("Close", self)
+        self.close_button.clicked.connect(self.close)
+        center_layout.addWidget(self.close_button)
+
+        layout.addStretch()
+        layout.addLayout(center_layout)
+        layout.addStretch()
+
+        self.setLayout(layout)
+
+    def set_review(self, review):
+        self.review = review
+        self.display_participants()
+
+    def display_participants(self):
+        participants = self.review.getReviewParticipants()
+        participants_text = "\n\n".join([f"{self.review.get_username(participant.userID)}: {participant.status.name}" for participant in participants])
+        self.participants_list.setText(participants_text)
 
 class MainWindow(QMainWindow):
     def __init__(self):
@@ -1240,6 +1291,7 @@ class MainWindow(QMainWindow):
             12: ViewAllReviewsFrame(self),
             13: ViewReviewDetailsFrame(self),
             14: AddReviewCommentFrame(self),
+            15: ReviewParticipantsPopup(self)
         }
 
         # Add frames to stacked widget
