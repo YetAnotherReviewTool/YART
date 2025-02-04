@@ -944,7 +944,7 @@ class OwnReviewAddCommentPopup(QDialog):
         self.title_input = QLineEdit(self)
         self.description_input = QLineEdit(self)
         self.file_link_input = QLineEdit(self)
-        self.reviewer_input = QLineEdit(self)
+        self.reviewer_input = QComboBox(self)
         self.commit_combo = QComboBox(self)
 
         form_layout.addRow("Title:", self.title_input)
@@ -954,6 +954,7 @@ class OwnReviewAddCommentPopup(QDialog):
         form_layout.addRow("Commit ID:", self.commit_combo)
 
         self.populate_commit_combo()
+        self.populate_reviewers_combo()
 
         self.add_reviewer_button = QPushButton("Add Reviewer", self)
         self.add_reviewer_button.clicked.connect(self.add_reviewer)
@@ -997,12 +998,25 @@ class OwnReviewAddCommentPopup(QDialog):
             for commit in commits:
                 self.commit_combo.addItem(f"{commit[0]} - {commit[1]}")
 
+    def populate_reviewers_combo(self):
+        users = DatabaseHelper.getModelsFromDb(User)
+        session = Session()
+        if users:
+            for user in users:
+                if user.userID != session.getUserID():
+                    self.reviewer_input.addItem(f"@{user.username}")
+
     def add_reviewer(self):
-        reviewer = self.reviewer_input.text().strip()
-        if reviewer:
-            self.review.assignReviewer(reviewer)
-            QMessageBox.information(self, "Reviewer Added", f"Reviewer '{reviewer}' added successfully.")
-            self.reviewer_input.clear()
+        reviewer_username = self.reviewer_input.currentText().strip()
+        if reviewer_username:
+            reviewers = DatabaseHelper.getModelsFromDbQuery(User, "username", reviewer_username[1:])
+            if len(reviewers) > 0:
+                reviewer = reviewers[0]
+                self.review.assignReviewer(reviewer.userID)
+                QMessageBox.information(self, "Reviewer Added", f"Reviewer '{reviewer_username}' added successfully.")
+                self.reviewer_input.removeItem(self.reviewer_input.currentIndex())
+            else:
+                QMessageBox.warning(self, "Error", f"No user found with username '{reviewer_username}'")
         else:
             QMessageBox.warning(self, "Error", "Reviewer username cannot be empty.")
 
@@ -1026,7 +1040,6 @@ class OwnReviewAddCommentPopup(QDialog):
             self.close()
         else:
             QMessageBox.warning(self, "Error", "No review to update.")
-
 
 class ViewAllReviewsFrame(QWidget):
     """Frame F12: View All Reviews"""
