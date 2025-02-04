@@ -41,6 +41,11 @@ class DatabaseHelper:
         return DatabaseHelper.getRowsFromDbQueries(model, DatabaseHelper.getCompositePrimaryKeyColumnNames(model),
                                                    primaryKeyVals)
 
+    def updateRowByCompositeKey(model: type, primaryKeyValues: list, parameterToChange: str,
+								 parameterValue: object):
+        return DatabaseHelper.DBInstance.updateDbRowWithComposite(model, DatabaseHelper.getCompositePrimaryKeyColumnNames(model),
+                                                      primaryKeyValues, parameterToChange, parameterValue)
+
     def getModelsFromDb(model: type) -> list:
         """
         Return all review from the database. Not sure if useful. Felt cute, might delete later
